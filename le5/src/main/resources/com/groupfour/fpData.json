@@ -1,0 +1,19 @@
+[
+    {
+        "gameTitle": "The Rogue Snake",
+        "gameImage": "snake.png",
+        "placeholder_image": "placeholder.png"
+    },
+
+    {
+        "gameTitle": "Connect 5",
+        "gameImage": "connect.png",
+        "placeholder_image": "placeholder.png"
+    },
+
+    {
+        "gameTitle": "4096",
+        "gameImage": "2048.png",
+        "placeholder_image": "placeholder.png"
+    }
+]

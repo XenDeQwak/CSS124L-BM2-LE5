@@ -1,0 +1,6 @@
+.title {
+    -fx-font: bold italic 18pt "Arial";
+}
+.titlebox {
+    -fx-padding: 20px;
+}
