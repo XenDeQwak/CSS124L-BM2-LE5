@@ -135,7 +135,7 @@ public class RSnake {
             snakeBorderPane.setCenter(getCanvas());
             controlBox.getChildren().addAll(returnBtn, restartBtn, shopBtn);
             snakeBorderPane.setBottom(controlBox);
-
+            
             scoreLabel = new Text("Score: " + foodPoints);
             scoreLabel.setFont(new Font("Century Gothic", 30));
             scoreLabel.setFill(Color.RED);
@@ -357,7 +357,9 @@ public class RSnake {
         snake.add(new Corner(width / 2, height / 2));
         snake.add(new Corner(width / 2, height / 2));
         direction = Dir.left;
-        speed = 8;
+        if (speed > 8 || speed < 8) {
+            speed = 8;
+        }
         gameOver = false;
         newFood();
         lastFoodEatenTime = System.currentTimeMillis();
@@ -447,7 +449,8 @@ public class RSnake {
                     int columnIndex = GridPane.getColumnIndex(node);
                     int rowIndex = GridPane.getRowIndex(node);
                     int itemIndex = columnIndex + rowIndex * 3;
-                    int priceInt = Integer.parseInt(price);
+                    JsonNode element = shopNode.get(itemIndex);
+                    int priceInt = Integer.parseInt(element.get("price").asText());
                     if (columnIndex == 0 && rowIndex == 0) {
                         if (isPurchased[itemIndex]) {
                             System.out.println("Already purchased");
@@ -537,8 +540,7 @@ public class RSnake {
 
         Timeline timeline = new Timeline(new KeyFrame(Duration.millis(2000), e -> {
             loadingStage.close();
-            RSnake rSnake = new RSnake();
-            rSnake.startSnakeGame();
+            startSnakeGame();
         }));
         timeline.play();
     }

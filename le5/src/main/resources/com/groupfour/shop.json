@@ -20,7 +20,7 @@
     "description": "+5 score, +1 size",
     "itemImage": "violetFood.png",
     "placeholder_image": "placeholder.png",
-    "price": 100
+    "price": 200
   },
 
   {
@@ -28,6 +28,6 @@
     "description": "+10 score, +3 size",
     "itemImage": "forbiddenFood.png",
     "placeholder_image": "placeholder.png",
-    "price": 200
+    "price": 500
   }
 ]
