@@ -6,24 +6,27 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 public class game_2048{
     
-    private Stage stage;
-
-    public game_2048(Stage stage){
-        this.stage = stage;
+    public game_2048(){
+        App.getStage().close();
+        
+        Stage stage2048 = new Stage();
         VBox root = new VBox();
         Button test = new Button("Test");
         test.setOnMouseClicked(e->{
-            returnToMainScene();
+            stage2048.close();
+            App.getStage().show();
         });
 
         //CREATING GRID FOR GAME
@@ -31,8 +34,8 @@ public class game_2048{
         // gameTiles.setGridLinesVisible(true);
         gameTiles.setHgap(5);
         gameTiles.setVgap(5);
-        gameTiles.prefWidthProperty().bind(stage.widthProperty());
-        gameTiles.prefHeightProperty().bind(stage.heightProperty());
+        gameTiles.prefWidthProperty().bind(stage2048.widthProperty());
+        gameTiles.prefHeightProperty().bind(stage2048.heightProperty());
         StackPane accessArray[][] = new StackPane[4][4];
 
 
@@ -64,15 +67,30 @@ public class game_2048{
 
         //SWITCH SCENES//
         Scene gameScene = new Scene(root, 1920, 1080);
-        stage.setScene(gameScene);
-        stage.setMaximized(true);
-        stage.show();
+        stage2048.setScene(gameScene);
+        stage2048.setMaximized(true);
+        stage2048.show();
     }
-
-
-
-    public void returnToMainScene() {
-        stage.setScene(App.getMainScene());
-        stage.show();
+    
+    public class Tile extends Pane {
+        private int value;
+        private Text text;
+    
+        public Tile(int value) {
+            this.value = value;
+            text = new Text(String.valueOf(value));
+            text.setFont(javafx.scene.text.Font.font(24));
+            getChildren().add(text);
+            setStyle("-fx-background-color: #ccc; -fx-border-color: #666; -fx-border-width: 1px;");
+        }
+    
+        public void setValue(int value) {
+            this.value = value;
+            text.setText(String.valueOf(value));
+        }
+    
+        public int getValue() {
+            return value;
+        }
     }
 }

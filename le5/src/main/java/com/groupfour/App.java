@@ -14,6 +14,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
@@ -55,7 +56,6 @@ public class App extends Application {
             gameBox.setHgap(20);
             gameBox.setVgap(20);
             gameBox.setAlignment(Pos.CENTER);
-            
             //Json components
             JsonNode frontPageNode = new ObjectMapper().readTree(getClass().getResourceAsStream("fpData.json"));
             if (frontPageNode.isArray()) {
@@ -120,7 +120,7 @@ public class App extends Application {
                 
                 else if (columnIndex == 2 && rowIndex == 0) {
                     System.out.println("2048");
-                    game_2048 game = new game_2048(stage);
+                    game_2048 game = new game_2048();
                 }
             } 
             else {
@@ -134,10 +134,6 @@ public class App extends Application {
         }
     }
     
-    public static Scene getMainScene() {
-        return mainScene;
-    }
-
     public static void main(String[] args) {
         launch();
     }
