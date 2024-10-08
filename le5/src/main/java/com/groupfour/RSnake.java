@@ -146,25 +146,25 @@ public class RSnake {
         switch (direction) {
             case up:
                 snake.get(0).y--;
-                if (snake.get(0).y <= 0) {
+                if (snake.get(0).y < 0) {
                     gameOver = true;
                 }
                 break;
             case down:
                 snake.get(0).y++;
-                if (snake.get(0).y >= height) {
+                if (snake.get(0).y > height - 1) {
                     gameOver = true;
                 }
                 break;
             case left:
                 snake.get(0).x--;
-                if (snake.get(0).x <= 0) {
+                if (snake.get(0).x < 0) {
                     gameOver = true;
                 }
                 break;
             case right:
                 snake.get(0).x++;
-                if (snake.get(0).x >= width) {
+                if (snake.get(0).x > width - 1) {
                     gameOver = true;
                 }
                 break;
