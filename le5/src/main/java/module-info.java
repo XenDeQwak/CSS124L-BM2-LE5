@@ -3,6 +3,7 @@ module com.groupfour {
     requires javafx.fxml;
     requires javafx.graphics;
     requires com.fasterxml.jackson.databind;
+    requires javafx.base;
 
     opens com.groupfour to javafx.fxml;
     exports com.groupfour;
