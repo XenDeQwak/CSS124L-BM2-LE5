@@ -108,6 +108,7 @@ public class RSnake {
     }
 
     public void startSnakeGame() {
+        running = true;
         try {
             Stage snakeStage = new Stage();
             BorderPane snakeBorderPane = new BorderPane();
@@ -125,6 +126,7 @@ public class RSnake {
                 restart();
             });
             shopBtn.setOnAction(e -> {
+                stopGame();
                 snakeStage.close();
                 try {
                     shop();
@@ -381,6 +383,7 @@ public class RSnake {
 
         Button shopReturn = new Button("Return to game");
         shopReturn.setOnAction(e -> {
+            stopGame();
             snakeStage.close();
             startSnakeGame();
         });
