@@ -13,7 +13,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
 
@@ -24,15 +23,15 @@ import java.io.IOException;
 
 public class App extends Application {
 
-    private static Scene scene;
+    private static Scene mainScene;
 
     @Override
     public void start(Stage stage) throws IOException {
 
         //Init
         VBox root = new VBox();
-        scene = new Scene(root, 640, 480);
-        stage.setScene(scene);
+        mainScene = new Scene(root, 640, 480);
+        stage.setScene(mainScene);
         stage.show();
 
         root.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
@@ -103,17 +102,28 @@ public class App extends Application {
             if (parentNode != null && GridPane.getColumnIndex(parentNode) != null && GridPane.getRowIndex(parentNode) != null) {
                 int columnIndex = GridPane.getColumnIndex(parentNode);
                 int rowIndex = GridPane.getRowIndex(parentNode);
+                
                 if (columnIndex == 0 && rowIndex == 0) {
                     System.out.println("Snake");
-                } else if (columnIndex == 1 && rowIndex == 0) {
+                } 
+                
+                else if (columnIndex == 1 && rowIndex == 0) {
                     System.out.println("Connect Four");
-                } else if (columnIndex == 2 && rowIndex == 0) {
+                } 
+                
+                else if (columnIndex == 2 && rowIndex == 0) {
                     System.out.println("2048");
+                    game_2048 game = new game_2048(stage);
                 }
-            } else {
+            } 
+            else {
                 System.out.println("No games");
             }
         });
+    }
+    
+    public static Scene getMainScene() {
+        return mainScene;
     }
 
     public static void main(String[] args) {
