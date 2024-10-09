@@ -29,7 +29,7 @@ public class controllerC5 implements Initializable{
 
 
     public void playBackgroundMusic() {
-        String musicFile = "le5\\src\\main\\resources\\com\\groupfour\\res\\c5Music.m4a";
+        String musicFile = "CSS124L-BM2-LE5\\le5\\src\\main\\resources\\com\\groupfour\\res\\c5Music.m4a";
         Media media = new Media(new File(musicFile).toURI().toString());
         mediaPlayer = new MediaPlayer(media);
         mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);

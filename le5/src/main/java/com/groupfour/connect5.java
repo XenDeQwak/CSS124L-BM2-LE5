@@ -25,7 +25,7 @@ public class connect5 {
         scene = new Scene(loadFXML("connect5"), 1280, 750);
         c5Stage.setScene(scene);
         c5Stage.setTitle("Connect 5: Bonanza");
-        c5Stage.getIcons().add(new Image("file:le5\\src\\main\\resources\\com\\groupfour\\res\\c5Logo.png"));
+        c5Stage.getIcons().add(new Image("file:CSS124L-BM2-LE5\\le5\\src\\main\\resources\\com\\groupfour\\res\\c5Logo.png"));
         c5Stage.show();
     }
     static void setRoot(String fxml) throws IOException {
