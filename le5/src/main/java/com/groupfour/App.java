@@ -41,10 +41,8 @@ public class App extends Application {
         try {
 
 
-
             // Instantiate game
             RSnake rSnake = new RSnake();
-
 
 
             // Instantiate stage and scene
@@ -53,7 +51,6 @@ public class App extends Application {
             stage.setScene(scene);
             stage.show();
             root.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-
 
 
             //UI Elements
@@ -72,26 +69,26 @@ public class App extends Application {
             gameBox.setAlignment(Pos.CENTER);
 
 
-
             //Json components
             frontPageNode = new ObjectMapper().readTree(getClass().getResourceAsStream("fpData.json"));
             getGameFromMenu(frontPageNode);
             root.getChildren().addAll(titleBox, gameBox);
             
 
-
             //When a cell gets clicked, this happens
             gameBox.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
+
                 Node node = (Node) e.getTarget();
                 if (node instanceof ImageView || node instanceof Label) {
                     node = node.getParent();
                 }
+
                 if (node != null && GridPane.getColumnIndex(node) != null && GridPane.getRowIndex(node) != null) {
                     int columnIndex = GridPane.getColumnIndex(node);
                     int rowIndex = GridPane.getRowIndex(node);
 
                     if (columnIndex == 0 && rowIndex == 0) {
-                        rSnake.displayLoadingScreen();
+                        rSnake.displayLoadingScreen();  
                     } else if (columnIndex == 1 && rowIndex == 0) {
                         System.out.println("Connect Four");
                     } else if (columnIndex == 2 && rowIndex == 0) {
@@ -103,8 +100,8 @@ public class App extends Application {
                 } else {
                     System.out.println("No games");
                 }
+                
             });
-
 
 
         } catch (IOException e) {
@@ -127,7 +124,7 @@ public class App extends Application {
 
         // Unpack JSON components
         for (JsonNode element : frontPageNode) {
-            
+
             String title = element.get("gameTitle").asText();
             String imageUrl = element.has("gameImage") ? element.get("gameImage").asText() : "";
             String placeholderUrl = element.has("placeholder_image") ? element.get("placeholder_image").asText() : "";
@@ -138,16 +135,10 @@ public class App extends Application {
             gameBoxElement.setOnMouseExited(e -> gameBoxElement.setCursor(Cursor.DEFAULT));
             Label gameTitle = new Label(title);
             
-            String useImage = (new File(imageUrl).isFile())? imageUrl : placeholderUrl;
+            
+            String useImage = (new File("le5\\src\\main\\resources\\com\\groupfour\\" + imageUrl).isFile())? imageUrl : placeholderUrl;
             ImageView gameImage = new ImageView(new Image(getClass().getResource(useImage).toExternalForm()));
-            /*
-            try {
-                gameImage = new ImageView(new Image(getClass().getResource(imageUrl).toExternalForm()));
-            } catch (NullPointerException e) {
-                System.out.println("File does not exist"); //checker, remove in the future
-                gameImage = new ImageView(new Image(getClass().getResource(placeholderUrl).toExternalForm()));
-            }
-            */
+            
 
             gameImage.setFitWidth(150);
             gameImage.setFitHeight(150);
@@ -163,6 +154,8 @@ public class App extends Application {
 
         }
     }
+
+    //public 
     
 
 
