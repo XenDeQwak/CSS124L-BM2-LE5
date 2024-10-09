@@ -24,10 +24,15 @@ import javafx.stage.Stage;
 
 public class App extends Application {
 
-
     static Scene scene;
     private static Stage stage;
 
+    VBox root;
+    HBox titleBox;
+    Text text;
+    GridPane gameBox;
+
+    JsonNode frontPageNode;
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -36,13 +41,13 @@ public class App extends Application {
 
 
 
-            // Instantiate games
+            // Instantiate game
             RSnake rSnake = new RSnake();
 
 
 
             // Instantiate stage and scene
-            VBox root = new VBox();
+            root = new VBox();
             scene = new Scene(root, 640, 480);
             stage.setScene(scene);
             stage.show();
@@ -51,15 +56,15 @@ public class App extends Application {
 
 
             //UI Elements
-            HBox titleBox = new HBox();
+            titleBox = new HBox();
             titleBox.setAlignment(Pos.CENTER);
             titleBox.getStyleClass().add("titlebox");
 
-            Text text = new Text("3 Games");
+            text = new Text("3 Games");
             text.getStyleClass().add("title");
             titleBox.getChildren().add(text);
 
-            GridPane gameBox = new GridPane();
+            gameBox = new GridPane();
             gameBox.setGridLinesVisible(true); //remove in the future
             gameBox.setHgap(20);
             gameBox.setVgap(20);
@@ -68,49 +73,8 @@ public class App extends Application {
 
 
             //Json components
-            JsonNode frontPageNode = new ObjectMapper().readTree(getClass().getResourceAsStream("fpData.json"));
-            if (frontPageNode.isArray()) {
-                int row = 0;
-                int column = 0;
-                for (JsonNode element : frontPageNode) {
-                    String title = element.get("gameTitle").asText();
-                    String imageUrl = element.has("gameImage") ? element.get("gameImage").asText() : "";
-                    String placeholderUrl = element.has("placeholder_image") ? element.get("placeholder_image").asText() : "";
-
-                    VBox gameBoxElement = new VBox();
-                    gameBoxElement.setAlignment(Pos.CENTER);
-                    gameBoxElement.setOnMouseEntered(e -> gameBoxElement.setCursor(Cursor.HAND));
-                    gameBoxElement.setOnMouseExited(e -> gameBoxElement.setCursor(Cursor.DEFAULT));
-                    Label gameTitle = new Label(title);
-                    
-                    ImageView gameImage = new ImageView();
-
-                    //exception handler image
-                    if (!imageUrl.isEmpty()) {
-                        try {
-                            gameImage = new ImageView(new Image(getClass().getResource(imageUrl).toExternalForm()));
-                        } catch (NullPointerException e) {
-                            System.out.println("File does not exist"); //checker, remove in the future
-                            gameImage = new ImageView(new Image(getClass().getResource(placeholderUrl).toExternalForm()));
-                        }
-                    }
-
-                    gameImage.setFitWidth(150);
-                    gameImage.setFitHeight(150);
-                    gameBoxElement.getChildren().addAll(gameTitle, gameImage);
-
-                    GridPane.setConstraints(gameBoxElement, column, row);
-                    gameBox.getChildren().add(gameBoxElement);
-
-                    column++;
-                    if (column > 2) {
-                        column = 0;
-                        row++;
-                    }
-                }
-            } else {
-                System.out.println("Error: JSON data is not an array");
-            }
+            frontPageNode = new ObjectMapper().readTree(getClass().getResourceAsStream("fpData.json"));
+            getGameFromMenu(frontPageNode);
             root.getChildren().addAll(titleBox, gameBox);
             
 
@@ -145,6 +109,53 @@ public class App extends Application {
         } catch (IOException e) {
             System.err.println("Error");
             e.printStackTrace();
+        }
+    }
+
+
+
+    public void getGameFromMenu (JsonNode frontPageNode) {
+        if (frontPageNode.isArray()) {
+            int row = 0;
+            int column = 0;
+            for (JsonNode element : frontPageNode) {
+                String title = element.get("gameTitle").asText();
+                String imageUrl = element.has("gameImage") ? element.get("gameImage").asText() : "";
+                String placeholderUrl = element.has("placeholder_image") ? element.get("placeholder_image").asText() : "";
+
+                VBox gameBoxElement = new VBox();
+                gameBoxElement.setAlignment(Pos.CENTER);
+                gameBoxElement.setOnMouseEntered(e -> gameBoxElement.setCursor(Cursor.HAND));
+                gameBoxElement.setOnMouseExited(e -> gameBoxElement.setCursor(Cursor.DEFAULT));
+                Label gameTitle = new Label(title);
+                
+                ImageView gameImage = new ImageView();
+
+                //exception handler image
+                if (!imageUrl.isEmpty()) {
+                    try {
+                        gameImage = new ImageView(new Image(getClass().getResource(imageUrl).toExternalForm()));
+                    } catch (NullPointerException e) {
+                        System.out.println("File does not exist"); //checker, remove in the future
+                        gameImage = new ImageView(new Image(getClass().getResource(placeholderUrl).toExternalForm()));
+                    }
+                }
+
+                gameImage.setFitWidth(150);
+                gameImage.setFitHeight(150);
+                gameBoxElement.getChildren().addAll(gameTitle, gameImage);
+
+                GridPane.setConstraints(gameBoxElement, column, row);
+                gameBox.getChildren().add(gameBoxElement);
+
+                column++;
+                if (column > 2) {
+                    column = 0;
+                    row++;
+                }
+            }
+        } else {
+            System.out.println("Error: JSON data is not an array");
         }
     }
     
