@@ -126,7 +126,7 @@ public class App extends Application {
                     int rowIndex = GridPane.getRowIndex(node);
 
                     if (columnIndex == 0 && rowIndex == 0) {
-                        rSnake.displayLoadingScreen();
+                        rSnake.startSnakeGame();
                     } else if (columnIndex == 1 && rowIndex == 0) {
                         System.out.println("Connect Five");
                         try {

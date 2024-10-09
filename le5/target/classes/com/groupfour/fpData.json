@@ -15,12 +15,6 @@
         "gameTitle": "4096",
         "gameImage": "2048.png",
         "placeholder_image": "placeholder.png"
-    },
-
-    {
-        "gameTitle": "Space Attackers",
-        "gameImage": "spaceattackers.png",
-        "placeholder_image": "placeholder.png"
     }
     
 ]
