@@ -29,11 +29,15 @@ public class controllerC5 implements Initializable{
 
 
     public void playBackgroundMusic() {
-        String musicFile = "CSS124L-BM2-LE5\\le5\\src\\main\\resources\\com\\groupfour\\res\\c5Music.m4a";
-        Media media = new Media(new File(musicFile).toURI().toString());
+        String musicFile = "c5Music.mp3";
+        URL resource = getClass().getResource(musicFile);
+        if (resource == null) {
+            System.out.println("Error: Could not find music file " + musicFile);
+            return;
+        }
+        Media media = new Media(resource.toExternalForm());
         mediaPlayer = new MediaPlayer(media);
         mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
-
         mediaPlayer.play();
     }
         @Override

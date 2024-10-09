@@ -27,6 +27,7 @@ public class App extends Application {
 
     static Scene scene;
     private static Stage stage;
+    
 
 
     @Override
@@ -38,6 +39,7 @@ public class App extends Application {
 
             // Instantiate games
             RSnake rSnake = new RSnake();
+            connect5 open = new connect5();
 
 
 
@@ -128,12 +130,12 @@ public class App extends Application {
                     if (columnIndex == 0 && rowIndex == 0) {
                         rSnake.startSnakeGame();
                     } else if (columnIndex == 1 && rowIndex == 0) {
-                        System.out.println("Connect Five");
                         try {
-                            connect5 open = new connect5();
+                            open.openConnect5();
                         } catch (IOException e1) {
                             e1.printStackTrace();
                         }
+                        System.out.println("Connect Five");
                     } 
                     
                     else if (columnIndex == 2 && rowIndex == 0) {
