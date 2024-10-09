@@ -1,4 +1,5 @@
 package com.groupfour;
+import javafx.scene.Node;
 import javafx.scene.control.Slider;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
@@ -14,7 +15,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
-public class Controller implements Initializable{
+public class controllerC5 implements Initializable{
 
     private static MediaPlayer mediaPlayer;
 
@@ -28,7 +29,7 @@ public class Controller implements Initializable{
 
 
     public void playBackgroundMusic() {
-        String musicFile = "src\\main\\res\\c5Music.m4a";
+        String musicFile = "le5\\src\\main\\resources\\com\\groupfour\\res\\c5Music.m4a";
         Media media = new Media(new File(musicFile).toURI().toString());
         mediaPlayer = new MediaPlayer(media);
         mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
@@ -49,7 +50,7 @@ public class Controller implements Initializable{
                 public void handle(MouseEvent event) {
                     Node node = (Node) event.getTarget();
                     int columnIndex = GridPane.getColumnIndex((javafx.scene.Node) node);
-                    if (columnIndex != -1) { // check if the click is on a column
+                    if (columnIndex != -1) {
                         changeCircleColor(columnIndex);
                     }
                 }
@@ -61,7 +62,7 @@ public class Controller implements Initializable{
                 Circle circle = circles.get(i);
                 int circleColumnIndex = GridPane.getColumnIndex(circle);
                 if (circleColumnIndex == columnIndex && circle.getFill().equals(Color.LIGHTGRAY)) {
-                    circle.setFill(Color.RED); // change the color to red
+                    circle.setFill(Color.RED); 
                     break;
                 }
             }
