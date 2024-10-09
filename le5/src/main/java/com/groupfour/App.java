@@ -128,8 +128,15 @@ public class App extends Application {
                     if (columnIndex == 0 && rowIndex == 0) {
                         rSnake.displayLoadingScreen();
                     } else if (columnIndex == 1 && rowIndex == 0) {
-                        System.out.println("Connect Four");
-                    } else if (columnIndex == 2 && rowIndex == 0) {
+                        System.out.println("Connect Five");
+                        try {
+                            connect5 open = new connect5();
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                        }
+                    } 
+                    
+                    else if (columnIndex == 2 && rowIndex == 0) {
                         System.out.println("2048");
                         game_2048 game = new game_2048();
                     } else if (columnIndex == 0 && rowIndex == 1) {
