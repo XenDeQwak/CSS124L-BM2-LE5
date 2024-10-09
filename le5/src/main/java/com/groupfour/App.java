@@ -43,6 +43,7 @@ public class App extends Application {
 
             // Instantiate game
             RSnake rSnake = new RSnake();
+            SpaceAttackers spacegame = new SpaceAttackers();
 
 
             // Instantiate stage and scene
@@ -95,7 +96,11 @@ public class App extends Application {
                         System.out.println("2048");
                         game_2048 game = new game_2048();
                     } else if (columnIndex == 0 && rowIndex == 1) {
-                        System.out.println("Space Attackers game");
+                        stage.close();
+                        spacegame.stage.setOnCloseRequest(e2 -> {
+                            stage.show();
+                        });
+                        spacegame.start();
                     }
                 } else {
                     System.out.println("No games");
@@ -135,7 +140,7 @@ public class App extends Application {
             gameBoxElement.setOnMouseExited(e -> gameBoxElement.setCursor(Cursor.DEFAULT));
             Label gameTitle = new Label(title);
             
-            
+
             String useImage = (new File("le5\\src\\main\\resources\\com\\groupfour\\" + imageUrl).isFile())? imageUrl : placeholderUrl;
             ImageView gameImage = new ImageView(new Image(getClass().getResource(useImage).toExternalForm()));
             
