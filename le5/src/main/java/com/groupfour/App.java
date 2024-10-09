@@ -1,5 +1,6 @@
 package com.groupfour;
 
+import java.io.File;
 import java.io.IOException;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -115,47 +116,51 @@ public class App extends Application {
 
 
     public void getGameFromMenu (JsonNode frontPageNode) {
-        if (frontPageNode.isArray()) {
-            int row = 0;
-            int column = 0;
-            for (JsonNode element : frontPageNode) {
-                String title = element.get("gameTitle").asText();
-                String imageUrl = element.has("gameImage") ? element.get("gameImage").asText() : "";
-                String placeholderUrl = element.has("placeholder_image") ? element.get("placeholder_image").asText() : "";
 
-                VBox gameBoxElement = new VBox();
-                gameBoxElement.setAlignment(Pos.CENTER);
-                gameBoxElement.setOnMouseEntered(e -> gameBoxElement.setCursor(Cursor.HAND));
-                gameBoxElement.setOnMouseExited(e -> gameBoxElement.setCursor(Cursor.DEFAULT));
-                Label gameTitle = new Label(title);
-                
-                ImageView gameImage = new ImageView();
-
-                //exception handler image
-                if (!imageUrl.isEmpty()) {
-                    try {
-                        gameImage = new ImageView(new Image(getClass().getResource(imageUrl).toExternalForm()));
-                    } catch (NullPointerException e) {
-                        System.out.println("File does not exist"); //checker, remove in the future
-                        gameImage = new ImageView(new Image(getClass().getResource(placeholderUrl).toExternalForm()));
-                    }
-                }
-
-                gameImage.setFitWidth(150);
-                gameImage.setFitHeight(150);
-                gameBoxElement.getChildren().addAll(gameTitle, gameImage);
-
-                GridPane.setConstraints(gameBoxElement, column, row);
-                gameBox.getChildren().add(gameBoxElement);
-
-                column++;
-                if (column > 2) {
-                    column = 0;
-                    row++;
-                }
-            }
-        } else {
+        if (!frontPageNode.isArray()) {
             System.out.println("Error: JSON data is not an array");
+            return;
+        }
+
+        int row = 0;
+        int column = 0;
+
+        // Unpack JSON components
+        for (JsonNode element : frontPageNode) {
+            
+            String title = element.get("gameTitle").asText();
+            String imageUrl = element.has("gameImage") ? element.get("gameImage").asText() : "";
+            String placeholderUrl = element.has("placeholder_image") ? element.get("placeholder_image").asText() : "";
+            
+            VBox gameBoxElement = new VBox();
+            gameBoxElement.setAlignment(Pos.CENTER);
+            gameBoxElement.setOnMouseEntered(e -> gameBoxElement.setCursor(Cursor.HAND));
+            gameBoxElement.setOnMouseExited(e -> gameBoxElement.setCursor(Cursor.DEFAULT));
+            Label gameTitle = new Label(title);
+            
+            String useImage = (new File(imageUrl).isFile())? imageUrl : placeholderUrl;
+            ImageView gameImage = new ImageView(new Image(getClass().getResource(useImage).toExternalForm()));
+            /*
+            try {
+                gameImage = new ImageView(new Image(getClass().getResource(imageUrl).toExternalForm()));
+            } catch (NullPointerException e) {
+                System.out.println("File does not exist"); //checker, remove in the future
+                gameImage = new ImageView(new Image(getClass().getResource(placeholderUrl).toExternalForm()));
+            }
+            */
+
+            gameImage.setFitWidth(150);
+            gameImage.setFitHeight(150);
+            gameBoxElement.getChildren().addAll(gameTitle, gameImage);
+            GridPane.setConstraints(gameBoxElement, column, row);
+            gameBox.getChildren().add(gameBoxElement);
+
+            column++;
+            if (column > 2) {
+                column = 0;
+                row++;
+            }
+
         }
     }
     
