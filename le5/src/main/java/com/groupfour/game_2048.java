@@ -74,8 +74,7 @@ public class game_2048{
             for(int column=0; column<gridSize;column++){
                 Tile tilePane = new Tile();
                 Tile accessTile = new Tile();
-                accessTile.setBackground(new Background(new BackgroundFill(Color.web("#cac1b5"), new CornerRadii(20), Insets.EMPTY)));
-                accessTile.setBorder(new Border(new BorderStroke(Color.web("#948c7c"), BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(5))));
+                createClearTile(row, column);
                 tilePane.setBackground(new Background(new BackgroundFill(Color.web("#948c7c"), new CornerRadii(20), Insets.EMPTY)));
                 tilePane.setBorder(new Border(new BorderStroke(Color.web("#948c7c"), BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(5))));
                 realGameTiles.add(accessTile,column, row);
@@ -109,22 +108,26 @@ public class game_2048{
             }
         };
         gameScene.setOnKeyPressed(keyEventHandler);
-        spawnTile();
-        spawnTile();
+        spawnTile(0, 3);
+        spawnTile(1,3);
+        spawnTile(3,3);
     }
     //End of constructor
 
     //Movement functions
-    private void spawnTile(){
-        int randomInt1 = random.nextInt(gridSize);
+    private void spawnTile(int temp,int temper){
+        // int randomInt1 = random.nextInt(gridSize);
         int randomInt2 = random.nextInt(gridSize);
-        while (accessArray[randomInt1][randomInt2].getValue()!=0){
-            randomInt1 = random.nextInt(gridSize);
-            randomInt2 = random.nextInt(gridSize);
-        }
-        accessArray[randomInt1][randomInt2].setBackground((new Background(new BackgroundFill(Color.web("#ece4db"), new CornerRadii(20), Insets.EMPTY))));
-        accessArray[randomInt1][randomInt2].setBorder(new Border(new BorderStroke(Color.web("#948c7c"), BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(5))));
-        accessArray[randomInt1][randomInt2].setValue(2);
+        // while (accessArray[randomInt1][randomInt2].getValue()!=0){
+        //     randomInt1 = random.nextInt(gridSize);
+        //     randomInt2 = random.nextInt(gridSize);
+        // }
+        // accessArray[randomInt1][randomInt2].setBackground((new Background(new BackgroundFill(Color.web("#ece4db"), new CornerRadii(20), Insets.EMPTY))));
+        // accessArray[randomInt1][randomInt2].setBorder(new Border(new BorderStroke(Color.web("#948c7c"), BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(5))));
+        // accessArray[randomInt1][randomInt2].setValue(randomInt1);
+        accessArray[temp][temper].setBackground((new Background(new BackgroundFill(Color.web("#ece4db"), new CornerRadii(20), Insets.EMPTY))));
+        accessArray[temp][temper].setBorder(new Border(new BorderStroke(Color.web("#948c7c"), BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(5))));
+        accessArray[temp][temper].setValue(temp+1);
     }
 
     // private TranslateTransition mergeTile(Tile tile1, Tile tile2){
@@ -142,48 +145,62 @@ public class game_2048{
     //     tile2.setBorder(new Border(new BorderStroke(Color.web("#998b7d"), BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(5))));
     //     transition.play();
     //     return transition;
-    // }
-
+    // }    
+    
     private void moveUp(){
-        ParallelTransition parallelTransition = new ParallelTransition();
-        Boolean moved;
+        Boolean moved=false;
+        
         for(int row=1;row<gridSize;row++){
             for(int column=0;column<gridSize;column++){
                 Tile tile=accessArray[row][column];
+
+                //Detect if you current tile has value (0 default null for int apparently)
                 if(tile.getValue() != 0){
-                    // TranslateTransition transition = new TranslateTransition(Duration.millis(500), tile);
+
                     for(int refRow=row-1;refRow>=0;refRow--){
+
+                        //Get the tile that is one row above the current tile
                         Tile refTile=accessArray[refRow][column];
+
+
+                        System.out.println("Tile value: " + tile.getValue());
+                        System.out.println("Reference Tile value: " + refTile.getValue());
+
+                        //If the value of that tile is equal to the value of current tile
                         if(refTile.getValue()==tile.getValue()){
-                            // parallelTransition.getChildren().add(mergeTile(tile, refTile));
+                            System.out.println("equal called for" +row+ column+" value: "+ tile.getValue());
+                            moved=true;
                             break;
                         }
+
+                        //If the value of that tile is not 0 and is not equal to the value of current tile, 
+                        //move current tile to one row below the reference tile.
                         else if(refTile.getValue() != 0){
-                            // parallelTransition.getChildren().add(mergeTile(tile, refTile));
+                            if(row==refRow+1){
+                                System.out.println("already at limit for"+row+column +"value:  "+ tile.getValue());
+                                moved=true;
+                                break;
+                            }
+                            System.out.println("non equal non zero called for" +row+ column +" value: "+ tile.getValue());
+                            replaceTileVertical(tile, refRow+1, column);
+                            createClearTile(row,column);
+                            moved=true;
                             break;
                         }
                     }
 
-                    // double target_y = accessArray[0][column].getLayoutY();
-                    // double origin_y = tile.getLayoutY();
-                    // transition.setFromY(origin_y);
-                    // transition.setToY(target_y-5);
-                    // transition.play();
-                    
-                    realGameTiles.getChildren().remove(accessArray[0][column]);
-                    GridPane.setRowIndex(tile,0);
-                    Tile accessTile;
-                    realGameTiles.add(accessTile = new Tile(),column,row);
-                    accessTile.setBackground(new Background(new BackgroundFill(Color.web("#cac1b5"), new CornerRadii(20), Insets.EMPTY)));
-                    accessTile.setBorder(new Border(new BorderStroke(Color.web("#948c7c"), BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(5))));
-                    accessArray[row][column]  = accessTile;
-
+                    if(!moved){
+                    replaceTileVertical(tile, 0, column);
+                    createClearTile(row, column);
+                    }
+                    moved=false;
                 }
             }
         }
-        spawnTile();
+        // spawnTile();
         System.out.println("wao");
     }
+
     private void moveDown(){
         System.out.println("ra");
     }
@@ -194,6 +211,19 @@ public class game_2048{
         System.out.println("sha");
     }
     
+    private void replaceTileVertical(Tile tile, int row, int column){
+        realGameTiles.getChildren().remove(accessArray[row][column]);
+        GridPane.setRowIndex(tile,row);
+        accessArray[row][column] = tile;
+    }
+    private void createClearTile(int row, int col){
+        Tile tile;
+        realGameTiles.add(tile = new Tile(),col,row); //no i did not make a mistake, the documentation really does put col first
+        tile.setBackground(new Background(new BackgroundFill(Color.web("#cac1b5"), new CornerRadii(20), Insets.EMPTY)));
+        tile.setBorder(new Border(new BorderStroke(Color.web("#948c7c"), BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(5))));
+        accessArray[row][col]  = tile;
+
+    }
     //Tile Template WIP
     public class Tile extends StackPane {
         private int value;
