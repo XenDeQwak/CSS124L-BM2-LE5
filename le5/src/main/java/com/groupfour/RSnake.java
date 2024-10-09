@@ -1,7 +1,13 @@
 package com.groupfour;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
@@ -25,16 +31,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import javafx.util.Duration;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class RSnake {
     private int speed = 8;
@@ -62,6 +58,13 @@ public class RSnake {
     private long lastFoodEatenTime = System.currentTimeMillis();
     private Text scoreLabel;
     private volatile boolean running = true;
+    private List<Corner> bombs = new ArrayList<>();
+    private int bombProbability = 100;
+    private long lastBombSpawnTime = System.currentTimeMillis();
+    private Color bombColor = Color.GRAY;
+    private List<Long> bombSpawnTimes = new ArrayList<>();
+    private int bombDuration = 15000;
+
 
     Stage snakeStage = new Stage();
 
@@ -187,7 +190,7 @@ public class RSnake {
     }
     
     public void updateGameState() {
-
+        bombs();
         for (int i = snake.size() - 1; i >= 1; i--) {
             snake.get(i).x = snake.get(i - 1).x;
             snake.get(i).y = snake.get(i - 1).y;
@@ -226,6 +229,7 @@ public class RSnake {
             snake.add(new Corner(snake.get(snake.size() - 1).x, snake.get(snake.size() - 1).y));
             int previousFoodColor = foodColor;
             newFood();
+            bombProbability++;
             if (foodColors.get(previousFoodColor) == Color.BLACK) {
                 foodPoints += 10;
                 snake.add(new Corner(snake.get(snake.size() - 4).x, snake.get(snake.size() - 4).y));
@@ -248,6 +252,20 @@ public class RSnake {
             }
         }
         checkSpeed();
+        for (Corner bomb : bombs) {
+            if (snake.get(0).x == bomb.x && snake.get(0).y == bomb.y) {
+                gameOver = true;
+            }
+        }
+        long currentTime = System.currentTimeMillis();
+        for (int i = bombs.size() - 1; i >= 0; i--) {
+            if (currentTime - bombSpawnTimes.get(i) > bombDuration) {
+                bombs.remove(i);
+                bombSpawnTimes.remove(i);
+            } else {
+                break;
+            }
+}
     }
     //lowers speed if 8 seconds has passed without a fruit being eaten
     public void checkSpeed() {
@@ -304,14 +322,14 @@ public class RSnake {
         gc.setFill(foodColors.get(foodColor));
         gc.fillOval(foodX * cornerSize, foodY * cornerSize, cornerSize, cornerSize);
 
-		// snake
-		for (Corner c : snake) {
-			gc.setFill(Color.LIGHTGREEN);
-			gc.fillRect(c.x * cornerSize, c.y * cornerSize, cornerSize - 1, cornerSize - 1);
-			gc.setFill(Color.GREEN);
-			gc.fillRect(c.x * cornerSize, c.y * cornerSize, cornerSize - 2, cornerSize - 2);
+        // snake
+        for (Corner c : snake) {
+            gc.setFill(Color.LIGHTGREEN);
+            gc.fillRect(c.x * cornerSize, c.y * cornerSize, cornerSize - 1, cornerSize - 1);
+            gc.setFill(Color.GREEN);
+            gc.fillRect(c.x * cornerSize, c.y * cornerSize, cornerSize - 2, cornerSize - 2);
 
-		}
+        }
 
         if (displayFeverDownMessage) {
             gc.setFill(Color.ORANGE);
@@ -321,10 +339,15 @@ public class RSnake {
                 displayFeverDownMessage = false;
             }
         }
+
+        gc.setFill(bombColor);
+        for (Corner bomb : bombs) {
+        gc.fillOval(bomb.x * cornerSize, bomb.y * cornerSize, cornerSize, cornerSize);
+    }
     }
 
     //makes new food everytime a snake eats food
-	public void newFood() {
+    public void newFood() {
         start: while (true) {
             foodX = rand.nextInt(width);
             foodY = rand.nextInt(height);
@@ -364,6 +387,9 @@ public class RSnake {
         }
         gameOver = false;
         newFood();
+        bombs.clear(); 
+        bombSpawnTimes.clear();
+        lastBombSpawnTime = System.currentTimeMillis();
         lastFoodEatenTime = System.currentTimeMillis();
     }
 
@@ -525,26 +551,64 @@ public class RSnake {
         text.setText("Score: " + foodPoints);
     }
     //Goofy ahh loading screen
-    public void displayLoadingScreen() {
-        Stage loadingStage = new Stage();
-        loadingStage.initOwner(App.getStage());
-        loadingStage.setTitle("Loading...");
+    // public void displayLoadingScreen() {
+    //     Stage loadingStage = new Stage();
+    //     loadingStage.initOwner(App.getStage());
+    //     loadingStage.setTitle("Loading...");
 
-        BorderPane loadingPane = new BorderPane();
-        loadingPane.setPrefSize(300, 200);
+    //     BorderPane loadingPane = new BorderPane();
+    //     loadingPane.setPrefSize(300, 200);
 
-        Label loadingLabel = new Label("Loading The Rogue Snake...");
-        loadingLabel.setFont(new Font("Century Gothic", 20));
-        loadingPane.setCenter(loadingLabel);
+    //     Label loadingLabel = new Label("Loading The Rogue Snake...");
+    //     loadingLabel.setFont(new Font("Century Gothic", 20));
+    //     loadingPane.setCenter(loadingLabel);
 
-        Scene loadingScene = new Scene(loadingPane);
-        loadingStage.setScene(loadingScene);
-        loadingStage.show();
+    //     Scene loadingScene = new Scene(loadingPane);
+    //     loadingStage.setScene(loadingScene);
+    //     loadingStage.show();
 
-        Timeline timeline = new Timeline(new KeyFrame(Duration.millis(2000), e -> {
-            loadingStage.close();
-            startSnakeGame();
-        }));
-        timeline.play();
+    //     Timeline timeline = new Timeline(new KeyFrame(Duration.millis(2000), e -> {
+    //         loadingStage.close();
+    //         startSnakeGame();
+    //     }));
+    //     timeline.play();
+    // }
+
+    public void bombs() {
+        long currentTime = System.currentTimeMillis();
+        for (int i = bombs.size() - 1; i >= 0; i--) {
+            if (currentTime - bombSpawnTimes.get(i) > bombDuration) {
+                bombs.remove(i);
+                bombSpawnTimes.remove(i);
+            }
+        }
+        if (currentTime - lastBombSpawnTime > 5000) {
+            lastBombSpawnTime = currentTime;
+            if (rand.nextInt(100) < bombProbability) {
+                spawnBomb();
+            }
+        }
+    }
+
+    public void spawnBomb() {
+        int bombX = rand.nextInt(width);
+        int bombY = rand.nextInt(height);
+    
+        boolean isOccupied = false;
+        for (Corner c : snake) {
+            if (c.x == bombX && c.y == bombY) {
+                isOccupied = true;
+                break;
+            }
+        }
+    
+        if (bombX == foodX && bombY == foodY) {
+            isOccupied = true;
+        }
+    
+        if (!isOccupied) {
+            bombs.add(new Corner(bombX, bombY));
+            bombSpawnTimes.add(System.currentTimeMillis());
+        }
     }
 }
