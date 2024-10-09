@@ -1,4 +1,4 @@
-package com.connect5;
+package com.groupfour;
 import javafx.scene.control.Slider;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
