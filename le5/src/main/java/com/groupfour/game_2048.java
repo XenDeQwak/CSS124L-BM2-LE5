@@ -3,6 +3,8 @@ package com.groupfour;
 
 import java.util.Random;
 
+import javafx.animation.Transition;
+import javafx.animation.TranslateTransition;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -22,7 +24,9 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 
 public class game_2048{
@@ -30,8 +34,8 @@ public class game_2048{
     //Could be used for dynamic grid size, user input menu
     int gridSize =4;
     Random random = new Random();
+    private GridPane backGround;
     private GridPane gameTiles;
-    private GridPane realGameTiles;
     private Tile accessArray[][];
     public game_2048(){
         App.getStage().close();
@@ -47,18 +51,18 @@ public class game_2048{
         });
 
         //CREATING GRID FOR GAME
-        realGameTiles = new GridPane();
         gameTiles = new GridPane();
+        backGround = new GridPane();
         StackPane mainStack = new StackPane();
-        mainStack.getChildren().addAll(gameTiles,realGameTiles);
+        mainStack.getChildren().addAll(backGround,gameTiles);
         accessArray = new Tile[gridSize][gridSize];
-        gameTiles.setBackground(new Background(new BackgroundFill(Color.web("#948c7c"), new CornerRadii(20), Insets.EMPTY)));
+        backGround.setBackground(new Background(new BackgroundFill(Color.web("#948c7c"), new CornerRadii(20), Insets.EMPTY)));
+        backGround.setBorder(new Border(new BorderStroke(Color.web("#948c7c"), BorderStrokeStyle.SOLID, new CornerRadii(20), new BorderWidths(5))));
         gameTiles.setBorder(new Border(new BorderStroke(Color.web("#948c7c"), BorderStrokeStyle.SOLID, new CornerRadii(20), new BorderWidths(5))));
-        realGameTiles.setBorder(new Border(new BorderStroke(Color.web("#948c7c"), BorderStrokeStyle.SOLID, new CornerRadii(20), new BorderWidths(5))));
+        backGround.setMaxWidth(gridSize*100);
+        backGround.setMaxHeight(gridSize*100);
         gameTiles.setMaxWidth(gridSize*100);
         gameTiles.setMaxHeight(gridSize*100);
-        realGameTiles.setMaxWidth(gridSize*100);
-        realGameTiles.setMaxHeight(gridSize*100);
 
         //Background
         for(int row=0; row<gridSize; row++){
@@ -68,14 +72,14 @@ public class game_2048{
                 createClearTile(row, column);
                 tilePane.setBackground(new Background(new BackgroundFill(Color.web("#948c7c"), new CornerRadii(20), Insets.EMPTY)));
                 tilePane.setBorder(new Border(new BorderStroke(Color.web("#948c7c"), BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(5))));
-                realGameTiles.add(accessTile,column, row);
-                gameTiles.add(tilePane, column, row);
+                gameTiles.add(accessTile,column, row);
+                backGround.add(tilePane, column, row);
                 accessArray[row][column]=accessTile;
             }
         }
 
+        backGround.setAlignment(Pos.CENTER);
         gameTiles.setAlignment(Pos.CENTER);
-        realGameTiles.setAlignment(Pos.CENTER);
         root.getChildren().addAll(mainStack,returnBtn);
 
         //SWITCH SCENES//
@@ -114,21 +118,21 @@ public class game_2048{
         }
         accessArray[randomInt1][randomInt2].setBackground((new Background(new BackgroundFill(Color.web("#ece4db"), new CornerRadii(20), Insets.EMPTY))));
         accessArray[randomInt1][randomInt2].setBorder(new Border(new BorderStroke(Color.web("#948c7c"), BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(5))));
+
         accessArray[randomInt1][randomInt2].setValue(2);
     }
 
-    private boolean mergeTile(Tile tileOrigin, Tile tileTarget){
+    private void mergeTile(Tile tileOrigin, Tile tileTarget){
         int targetRow = GridPane.getRowIndex(tileTarget);
         int targetCol = GridPane.getColumnIndex(tileTarget);
         int originRow = GridPane.getRowIndex(tileOrigin);
         int originCol = GridPane.getColumnIndex(tileOrigin);
         tileOrigin.setValue(tileOrigin.getValue() +tileTarget.getValue());
-        realGameTiles.getChildren().remove(tileTarget);
+        gameTiles.getChildren().remove(tileTarget);
         GridPane.setRowIndex(tileOrigin, targetRow);
         GridPane.setColumnIndex(tileOrigin, targetCol);
         accessArray[targetRow][targetCol] = tileOrigin;
         createClearTile(originRow, originCol);
-        return true;
         }    
     
     private void moveUp(){
@@ -137,17 +141,16 @@ public class game_2048{
         for(int row=1;row<gridSize;row++){
             for(int column=0;column<gridSize;column++){
                 Tile tile=accessArray[row][column];
-                //Detect if you current tile has value (0 default null for int apparently)
+                //Detect if your current tile has value (0 default null for int apparently)
                 if(tile.getValue() != 0){
                     for(int refRow=row-1;refRow>=0;refRow--){
                         //Get the tile that is one row above the current tile
                         Tile refTile=accessArray[refRow][column];
-                        System.out.println("Tile value: " + tile.getValue());
-                        System.out.println("Reference Tile value: " + refTile.getValue());
                         //If the value of that tile is equal to the value of current tile
                         if(refTile.getValue()==tile.getValue()){
-                            System.out.println("equal called for" +row+ column+" value: "+ tile.getValue());
-                            mergeTile(tile, refTile);
+                            tile.setValue(tile.getValue()+refTile.getValue());
+                            replaceTileVertical(tile, refRow, column);
+                            createClearTile(row, column);
                             aboveEmpty=false;
                             moved=true;
                             break;
@@ -156,11 +159,9 @@ public class game_2048{
                         //move current tile to one row below the reference tile.
                         else if(refTile.getValue() != 0){
                             if(row==refRow+1){
-                                System.out.println("already at limit for"+row+column +"value:  "+ tile.getValue());
                                 aboveEmpty=false;
                                 break;
                             }
-                            System.out.println("non equal non zero called for" +row+ column +" value: "+ tile.getValue());
                             replaceTileVertical(tile, refRow+1, column);
                             createClearTile(row,column);
                             aboveEmpty=false;
@@ -184,7 +185,56 @@ public class game_2048{
     }
 
     private void moveDown(){
-        System.out.println("ra");
+        Boolean moved=false;
+        Boolean belowEmpty=true;
+        for(int row=3;row>=0;row--){
+            for(int column=0;column<gridSize;column++){
+                Tile tile=accessArray[row][column];
+                //Detect if your current tile has value (0 default null for int apparently)
+                if(tile.getValue() != 0){
+                    for(int refRow=row+1;refRow<gridSize;refRow++){
+                        //Get the tile that is one row below the current tile
+                        Tile refTile=accessArray[refRow][column];
+                        //If the value of that tile is equal to the value of current tile
+                        if(refTile.getValue()==tile.getValue()){
+                            System.out.println("collide at: "+row+column);
+                            tile.setValue(tile.getValue()+refTile.getValue());
+                            replaceTileVertical(tile, refRow, column);
+                            createClearTile(row, column);
+                            belowEmpty=false;
+                            moved=true;
+                            break;
+                        }
+
+                        //If the value of that tile is not 0 and is not equal to the value of current tile, 
+                        //move current tile to one row below the reference tile.
+                        else if(refTile.getValue() != 0){
+                            System.out.println("unique collide at: "+row+column);
+                            if(row==refRow-1){
+                                belowEmpty=false;
+                                break;
+                            }
+                            replaceTileVertical(tile, refRow-1, column);
+                            createClearTile(row,column);
+                            belowEmpty=false;
+                            moved=true;
+                            break;
+                        }
+                    }
+                    //If belowEmpty, means every tile above is value=0;means null
+                    if(belowEmpty){
+                        System.out.println("empty below at: "+row+column);
+                        replaceTileVertical(tile, gridSize-1, column);
+                        createClearTile(row, column);
+                        moved=true;
+                    }
+                    belowEmpty=true;
+                }
+            }
+        }
+        if(moved){
+        spawnTile();
+        }
     }
     private void moveLeft(){
         System.out.println("wa");
@@ -193,30 +243,37 @@ public class game_2048{
         System.out.println("sha");
     }
     
-    private boolean replaceTileVertical(Tile tile, int row, int column){
-        realGameTiles.getChildren().remove(accessArray[row][column]);
+    private void replaceTileVertical(Tile tile, int row, int column){
+        gameTiles.getChildren().remove(accessArray[row][column]);
         GridPane.setRowIndex(tile,row);
         accessArray[row][column] = tile;
-        return true;
     }
+
     private void createClearTile(int row, int col){
         Tile tile;
-        realGameTiles.add(tile = new Tile(),col,row); //no i did not make a mistake, the documentation really does put col first
+        gameTiles.add(tile = new Tile(),col,row); //no i did not make a mistake, the documentation really does put col first
         tile.setBackground(new Background(new BackgroundFill(Color.web("#cac1b5"), new CornerRadii(20), Insets.EMPTY)));
         tile.setBorder(new Border(new BorderStroke(Color.web("#948c7c"), BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(5))));
-        accessArray[row][col]  = tile;
+        accessArray[row][col] = tile;
 
     }
     //Tile Template WIP
     public class Tile extends StackPane {
         private int value;
         private Text text;
+
+        
+
+        
     
         public Tile() {
             text = new Text();
             text.setFont(javafx.scene.text.Font.font(24));
             getChildren().add(text);
             setPrefSize(100, 100);
+            setOnMouseClicked(e-> {
+                System.out.println(value);
+            });
         }
     
         public void setValue(int value) {
