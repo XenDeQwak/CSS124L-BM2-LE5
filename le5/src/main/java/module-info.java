@@ -6,7 +6,7 @@ module com.groupfour {
     requires javafx.base;
     requires javafx.media;
     requires java.xml;
-
+    
     opens com.groupfour to javafx.fxml;
     exports com.groupfour;
 }

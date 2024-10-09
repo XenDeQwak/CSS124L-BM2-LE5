@@ -1,15 +1,24 @@
 package com.groupfour;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javafx.application.Platform;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
@@ -18,6 +27,8 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -29,8 +40,11 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+
+
 
 public class RSnake {
     private int speed = 8;
@@ -56,7 +70,7 @@ public class RSnake {
     private Thread gameThread;
     private boolean isPaused = false;
     private long lastFoodEatenTime = System.currentTimeMillis();
-    private Text scoreLabel;
+    private Text fpLabel;
     private volatile boolean running = true;
     private List<Corner> bombs = new ArrayList<>();
     private int bombProbability = 100;
@@ -64,7 +78,14 @@ public class RSnake {
     private Color bombColor = Color.GRAY;
     private List<Long> bombSpawnTimes = new ArrayList<>();
     private int bombDuration = 15000;
-
+    private final Lock lock = new ReentrantLock();
+    private final Condition pauseCondition = lock.newCondition();
+    private String databaseUrl;
+    private boolean hasUpdated = true;
+    private Text scoreLabel;
+    private int score = 0;
+    private boolean directionChangePending = false;
+    
 
     Stage snakeStage = new Stage();
 
@@ -108,6 +129,8 @@ public class RSnake {
         for (int i = 0; i < 4; i++) {
             isPurchased[i] = false;
         }
+        databaseUrl = "https://rogue-snake-leaderboard-default-rtdb.asia-southeast1.firebasedatabase.app/";
+
     }
 
     public void startSnakeGame() {
@@ -119,6 +142,7 @@ public class RSnake {
             Button returnBtn = new Button("Return to Main Menu");
             Button restartBtn = new Button("Restart game");
             Button shopBtn = new Button("Shop");
+            Button ldbBtn = new Button("Leaderboards");
             HBox controlBox = new HBox();
             returnBtn.setOnAction(e -> {
                 snakeStage.close();
@@ -137,15 +161,44 @@ public class RSnake {
                     e1.printStackTrace();
                 }
             });
+            ldbBtn.setOnAction(e -> {
+                try {
+                    Stage leaderboardStage = new Stage();
+                    leaderboardStage.setTitle("Leaderboard");
+                    VBox root = new VBox();
+                    root.setSpacing(10);
+                    root.setPadding(new Insets(10));
+                    Scene scene = new Scene(root, 300, 400);
+                    leaderboardStage.setScene(scene);
+                    leaderboardStage.show();
+
+                    Text leaderboardTitle = new Text("Leaderboard");
+                    leaderboardTitle.setFont(new Font("Arial", 24));
+                    root.getChildren().add(leaderboardTitle);
+
+                    Text leaderboardText = new Text();
+                    leaderboardText.setFont(new Font("Arial", 18));
+                    root.getChildren().add(leaderboardText);
+
+                    displayLeaderboard(leaderboardText);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            });
             snakeBorderPane.setCenter(getCanvas());
-            controlBox.getChildren().addAll(returnBtn, restartBtn, shopBtn);
+            controlBox.getChildren().addAll(returnBtn, restartBtn, shopBtn, ldbBtn);
             snakeBorderPane.setBottom(controlBox);
             
-            scoreLabel = new Text("Score: " + foodPoints);
-            scoreLabel.setFont(new Font("Century Gothic", 30));
-            scoreLabel.setFill(Color.RED);
-            snakeBorderPane.setTop(scoreLabel);
-            BorderPane.setAlignment(scoreLabel, Pos.TOP_LEFT);
+            VBox numInfo = new VBox();
+            fpLabel = new Text("Food points: " + foodPoints);
+            scoreLabel = new Text("Score: " + score);
+            fpLabel.setFont(new Font("Century Gothic", 20));
+            fpLabel.setFill(Color.RED);
+            numInfo.getChildren().addAll(fpLabel, scoreLabel);
+            scoreLabel.setFont(Font.font("Century Gothic", FontWeight.BOLD, 20));
+            scoreLabel.setFill(Color.YELLOWGREEN);
+            snakeBorderPane.setTop(numInfo);
+            BorderPane.setAlignment(fpLabel, Pos.TOP_LEFT);
 
             Scene scene = new Scene(snakeBorderPane, getWidth() * getCornerSize(), getHeight() * getCornerSize() + 100);
             scene.addEventFilter(KeyEvent.KEY_PRESSED, getKeyEventHandler());
@@ -154,6 +207,7 @@ public class RSnake {
             snakeStage.show();
             App.getStage().hide();
             startGame();
+            pauseGame();
             
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -164,6 +218,14 @@ public class RSnake {
         gameThread = new Thread(() -> {
             while (running) {
                 try {
+                    lock.lock();
+                    try {
+                        while (isPaused) {
+                            pauseCondition.await();
+                        }
+                    } finally {
+                        lock.unlock();
+                    }
                     if (!isPaused) {
                         updateGameState();
                     }
@@ -176,13 +238,23 @@ public class RSnake {
         });
         gameThread.start();
     }
-    //pause not yet implemented, idk if i should even implement it
+    
     public void pauseGame() {
-        isPaused = true;
+        if (!isPaused) {
+            isPaused = true;
+            Platform.runLater(this::draw);
+        }
     }
 
     public void resumeGame() {
         isPaused = false;
+        lock.lock();
+        try {
+            pauseCondition.signal();
+        } finally {
+            lock.unlock();
+        }
+        Platform.runLater(this::draw);
     }
 
     public void stopGame() {
@@ -191,38 +263,35 @@ public class RSnake {
     
     public void updateGameState() {
         bombs();
+    
+        // update body positions
         for (int i = snake.size() - 1; i >= 1; i--) {
             snake.get(i).x = snake.get(i - 1).x;
             snake.get(i).y = snake.get(i - 1).y;
         }
-
-        // game over if snake touches border
+    
+        // update head position
+        int newX = snake.get(0).x;
+        int newY = snake.get(0).y;
+    
         switch (direction) {
             case up:
-                snake.get(0).y--;
-                if (snake.get(0).y < 0) {
-                    gameOver = true;
-                }
+                newY--;
                 break;
             case down:
-                snake.get(0).y++;
-                if (snake.get(0).y > height - 1) {
-                    gameOver = true;
-                }
+                newY++;
                 break;
             case left:
-                snake.get(0).x--;
-                if (snake.get(0).x < 0) {
-                    gameOver = true;
-                }
+                newX--;
                 break;
             case right:
-                snake.get(0).x++;
-                if (snake.get(0).x > width - 1) {
-                    gameOver = true;
-                }
+                newX++;
                 break;
         }
+    
+        snake.get(0).x = newX;
+        snake.get(0).y = newY;
+
         // Let snake grow if it has eaten food
         if (foodX == snake.get(0).x && foodY == snake.get(0).y) {
             lastFoodEatenTime = System.currentTimeMillis();
@@ -232,25 +301,38 @@ public class RSnake {
             bombProbability++;
             if (foodColors.get(previousFoodColor) == Color.BLACK) {
                 foodPoints += 10;
+                score += 100;
                 snake.add(new Corner(snake.get(snake.size() - 4).x, snake.get(snake.size() - 4).y));
             } else if (foodColors.get(previousFoodColor) == Color.VIOLET) {
                 foodPoints += 5;
+                score += 50;
             } else if (foodColors.get(previousFoodColor) == Color.GREEN) {
                 foodPoints += 3;
+                score += 30;
             } else if (foodColors.get(previousFoodColor) == Color.BLUE) {
                 foodPoints += 2;
+                score += 20;
             } else if (foodColors.get(previousFoodColor) == Color.RED) {
                 foodPoints++;
+                score += 10;
             }
             speed++;
+            updatefpLabel(fpLabel);
             updateScoreLabel(scoreLabel);
         }
+    
+        // game over if snake touches border
+        if (newX < 0 || newX >= width || newY < 0 || newY >= height) {
+            gameOver = true;
+        }
+    
         // Game over if snake hits itself
         for (int i = 1; i < snake.size(); i++) {
             if (snake.get(0).x == snake.get(i).x && snake.get(0).y == snake.get(i).y) {
                 gameOver = true;
             }
         }
+    
         checkSpeed();
         for (Corner bomb : bombs) {
             if (snake.get(0).x == bomb.x && snake.get(0).y == bomb.y) {
@@ -265,7 +347,15 @@ public class RSnake {
             } else {
                 break;
             }
-}
+        }
+        if (gameOver) {
+            if (hasUpdated) {
+                updateScore();
+                hasUpdated = false;
+            }
+        } else {
+            hasUpdated = true;
+        }
     }
     //lowers speed if 8 seconds has passed without a fruit being eaten
     public void checkSpeed() {
@@ -290,60 +380,109 @@ public class RSnake {
     //key event handler, might add wasd if needed
     public EventHandler<KeyEvent> getKeyEventHandler() {
         return key -> {
-            if (key.getCode() == KeyCode.UP && direction != Dir.down) {
-                direction = Dir.up;
+            if (directionChangePending) {
+                return;
             }
-            if (key.getCode() == KeyCode.LEFT && direction != Dir.right) {
-                direction = Dir.left;
+            directionChangePending = true;
+            Dir newDirection = null;
+            if (key.getCode() == KeyCode.UP) {
+                newDirection = Dir.up;
             }
-            if (key.getCode() == KeyCode.DOWN && direction != Dir.up) {
-                direction = Dir.down;
+            if (key.getCode() == KeyCode.DOWN) {
+                newDirection = Dir.down;
             }
-            if (key.getCode() == KeyCode.RIGHT && direction != Dir.left) {
-                direction = Dir.right;
+            if (key.getCode() == KeyCode.LEFT) {
+                newDirection = Dir.left;
             }
+            if (key.getCode() == KeyCode.RIGHT) {
+                newDirection = Dir.right;
+            }
+            if (newDirection != null) {
+                int newX = snake.get(0).x;
+                int newY = snake.get(0).y;
+                switch (newDirection) {
+                    case up:
+                        newY--;
+                        break;
+                    case down:
+                        newY++;
+                        break;
+                    case left:
+                        newX--;
+                        break;
+                    case right:
+                        newX++;
+                        break;
+                }
+                boolean collision = false;
+                for (int i = 1; i < snake.size(); i++) {
+                    if (snake.get(i).x == newX && snake.get(i).y == newY) {
+                        collision = true;
+                        break;
+                    }
+                }
+                if (!collision) {
+                    direction = newDirection;
+                }
+            }
+            if (key.getCode() == KeyCode.R) {
+                resumeGame();
+            }
+            directionChangePending = false;
         };
     }
 
     //draws needed elements
     public void draw() {
-        if (gameOver) {
-            gc.setFill(Color.RED);
-            gc.setFont(new Font("Impact", 50));
-            gc.fillText("GAME OVER", 130, 250);
-            return;
-        }
-        // background
-        gc.setFill(Color.BLACK);
-        gc.fillRect(0, 0, width * cornerSize, height * cornerSize);
-
-        // score
-
-        gc.setFill(foodColors.get(foodColor));
-        gc.fillOval(foodX * cornerSize, foodY * cornerSize, cornerSize, cornerSize);
-
-        // snake
-        for (Corner c : snake) {
-            gc.setFill(Color.LIGHTGREEN);
-            gc.fillRect(c.x * cornerSize, c.y * cornerSize, cornerSize - 1, cornerSize - 1);
-            gc.setFill(Color.GREEN);
-            gc.fillRect(c.x * cornerSize, c.y * cornerSize, cornerSize - 2, cornerSize - 2);
-
-        }
-
-        if (displayFeverDownMessage) {
-            gc.setFill(Color.ORANGE);
-            gc.setFont(new Font("Impact", 40));
-            gc.fillText("FEVER DOWN!!", 130, 50);
-            if (System.currentTimeMillis() - feverDownMessageStartTime > 2000) {
-                displayFeverDownMessage = false;
+        lock.lock();
+        try {
+            if (gameOver) {
+                gc.setFill(Color.RED);
+                gc.setFont(new Font("Impact", 50));
+                gc.fillText("GAME OVER", 130, 250);
+                return;
             }
+            // background
+            gc.setFill(Color.BLACK);
+            gc.fillRect(0, 0, width * cornerSize, height * cornerSize);
+    
+            // score
+    
+            gc.setFill(foodColors.get(foodColor));
+            gc.fillOval(foodX * cornerSize, foodY * cornerSize, cornerSize, cornerSize);
+    
+            // snake
+            for (Corner c : snake) {
+                gc.setFill(Color.LIGHTGREEN);
+                gc.fillRect(c.x * cornerSize, c.y * cornerSize, cornerSize - 1, cornerSize - 1);
+                gc.setFill(Color.GREEN);
+                gc.fillRect(c.x * cornerSize, c.y * cornerSize, cornerSize - 2, cornerSize - 2);
+    
+            }
+    
+            if (displayFeverDownMessage) {
+                gc.setFill(Color.ORANGE);
+                gc.setFont(new Font("Impact", 40));
+                gc.fillText("FEVER DOWN!!", 130, 50);
+                if (System.currentTimeMillis() - feverDownMessageStartTime > 2000) {
+                    displayFeverDownMessage = false;
+                }
+            }
+    
+            gc.setFill(bombColor);
+            for (Corner bomb : bombs) {
+                gc.fillOval(bomb.x * cornerSize, bomb.y * cornerSize, cornerSize, cornerSize);
+            }
+    
+            if (isPaused) {
+                gc.setFill(Color.RED);
+                gc.setFont(new Font("Impact", 40));
+                gc.fillText("GAME PAUSED", 130, 50);
+                gc.fillText("Press R to resume", 100, 90);
+            }
+        } finally {
+            lock.unlock();
         }
-
-        gc.setFill(bombColor);
-        for (Corner bomb : bombs) {
-        gc.fillOval(bomb.x * cornerSize, bomb.y * cornerSize, cornerSize, cornerSize);
-    }
     }
 
     //makes new food everytime a snake eats food
@@ -391,21 +530,30 @@ public class RSnake {
         bombSpawnTimes.clear();
         lastBombSpawnTime = System.currentTimeMillis();
         lastFoodEatenTime = System.currentTimeMillis();
+        score = 0;
+        updateScoreLabel(scoreLabel);
     }
 
     public void shop() throws IOException {
+        pauseGame();
         snakeStage.setTitle("Store");
         VBox root = new VBox();
-        Scene scene = new Scene(root, 480, 360);
+        Scene scene = new Scene(root, 600, 400);
         snakeStage.setScene(scene);
         snakeStage.show();
 
         HBox shopName = new HBox();
         shopName.setMinHeight(50);
         shopName.setAlignment(Pos.CENTER);
-        Text text = new Text("Shop\nFood points: " + foodPoints);
+        Text text = new Text("Shop\nFood points: " + foodPoints + "\nFood");
         text.getStyleClass().add("title");
         shopName.getChildren().add(text);
+
+        HBox snakeName = new HBox();
+        Text snakeText = new Text("Snakes");
+        snakeName.setMinHeight(50);
+        snakeName.setAlignment(Pos.CENTER);
+        snakeName.getChildren().add(snakeText);
 
         Button shopReturn = new Button("Return to game");
         shopReturn.setOnAction(e -> {
@@ -413,6 +561,10 @@ public class RSnake {
             snakeStage.close();
             startSnakeGame();
         });
+        HBox buttonLoc = new HBox(shopReturn);
+        buttonLoc.setAlignment(Pos.CENTER);
+        buttonLoc.setMinHeight(50);
+
         GridPane shopBox = new GridPane();
         shopBox.setGridLinesVisible(true); //remove in the future
         shopBox.setHgap(20);
@@ -467,7 +619,70 @@ public class RSnake {
         } else {
             System.out.println("Error: JSON data is not an array");
         }
-        root.getChildren().addAll(shopName, shopBox, shopReturn);
+
+        GridPane snakeBox = new GridPane();
+        snakeBox.setGridLinesVisible(true); //remove in the future
+        snakeBox.setHgap(20);
+        snakeBox.setVgap(20);
+        snakeBox.setAlignment(Pos.CENTER);
+
+        //Json components
+        JsonNode snakeNode = new ObjectMapper().readTree(getClass().getResourceAsStream("snake.json"));
+        if (snakeNode.isArray()) {
+            int row = 0;
+            int column = 0;
+            for (JsonNode element : snakeNode) {
+                String snakeTitle = element.get("snakeName").asText();
+                price = element.get("price").asText();
+                String description = element.get("description").asText();
+                String imageUrl = element.has("snakeImage") ? element.get("snakeImage").asText() : "";
+                String placeholderUrl = element.has("placeholder_image") ? element.get("placeholder_image").asText() : "";
+
+                VBox snakeBoxElement = new VBox();
+                snakeBoxElement.setMinWidth(146.6666666666667);
+                snakeBoxElement.setAlignment(Pos.CENTER);
+                Label snake = new Label(snakeTitle);
+                Label snakePrice = new Label(price + " coins");
+                Label snakeDescription = new Label(description);
+                Button use = new Button("Use");
+                use.setOnMouseEntered(e -> use.setCursor(Cursor.HAND));
+                use.setOnMouseExited(e -> use.setCursor(Cursor.DEFAULT));
+
+                ImageView snakeImage = new ImageView();
+
+                //exception handler image
+                if (!imageUrl.isEmpty()) {
+                    try {
+                        snakeImage = new ImageView(new Image(getClass().getResource(imageUrl).toExternalForm()));
+                    } catch (NullPointerException e) {
+                        snakeImage = new ImageView(new Image(getClass().getResource(placeholderUrl).toExternalForm()));
+                    }
+                }
+
+                snakeImage.setFitWidth(50);
+                snakeImage.setFitHeight(50);
+                snakeBoxElement.getChildren().addAll(snake, snakeImage, snakePrice, snakeDescription, use);
+
+                GridPane.setConstraints(snakeBoxElement, column, row);
+                snakeBox.getChildren().add(snakeBoxElement);
+
+                column++;
+                if (column > 2) {
+                    column = 0;
+                    row++;
+                }
+            }
+        } else {
+            System.out.println("Error: JSON data is not an array");
+        }
+
+        VBox vbox = new VBox(shopName, shopBox, snakeName, snakeBox, buttonLoc);
+        vbox.setAlignment(Pos.CENTER);
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setContent(vbox);
+        scrollPane.setFitToWidth(true);
+        root.getChildren().addAll(scrollPane);
+
 
         shopBox.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
                 Node node = (Node) e.getTarget();
@@ -547,33 +762,127 @@ public class RSnake {
     public void updateShopLabel(Text text) {
         text.setText("Shop\nFood points: " + foodPoints);
     }
-    public void updateScoreLabel(Text text) {
-        text.setText("Score: " + foodPoints);
+    public void updatefpLabel(Text text) {
+        text.setText("Food points: " + foodPoints);
     }
-    //Goofy ahh loading screen
-    // public void displayLoadingScreen() {
-    //     Stage loadingStage = new Stage();
-    //     loadingStage.initOwner(App.getStage());
-    //     loadingStage.setTitle("Loading...");
+    public void updateScoreLabel(Text text) {
+        text.setText("Score: " + score);
+    }
 
-    //     BorderPane loadingPane = new BorderPane();
-    //     loadingPane.setPrefSize(300, 200);
+    public void updateScore() {
+        try {
+            URL url = new URL(databaseUrl + "/scores.json");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
 
-    //     Label loadingLabel = new Label("Loading The Rogue Snake...");
-    //     loadingLabel.setFont(new Font("Century Gothic", 20));
-    //     loadingPane.setCenter(loadingLabel);
+            int responseCode = connection.getResponseCode();
+            if (responseCode == 200) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String line;
+                StringBuilder leaderboard = new StringBuilder();
+                while ((line = reader.readLine()) != null) {
+                    leaderboard.append(line);
+                }
+                reader.close();
 
-    //     Scene loadingScene = new Scene(loadingPane);
-    //     loadingStage.setScene(loadingScene);
-    //     loadingStage.show();
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode jsonNode = mapper.readTree(leaderboard.toString());
 
-    //     Timeline timeline = new Timeline(new KeyFrame(Duration.millis(2000), e -> {
-    //         loadingStage.close();
-    //         startSnakeGame();
-    //     }));
-    //     timeline.play();
-    // }
+                int currentScore = score;
+                boolean isHighScore = true;
 
+                for (JsonNode node : jsonNode) {
+                    int score = node.get("score").asInt();
+                    if (score >= currentScore) {
+                        isHighScore = false;
+                        break;
+                    }
+                }
+
+                if (isHighScore) {
+                    Platform.runLater(() -> {
+                    String playerName = getPlayerName();
+                    updateScoreWithPlayerName(playerName);
+                    });
+                }
+            } else {
+                System.out.println("Error updating score: " + responseCode);
+            }
+        } catch (Exception e) {
+            System.out.println("Error updating score: " + e.getMessage());
+        }
+    }
+
+    public String getPlayerName() {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("New High Score!");
+        dialog.setHeaderText("Congratulations, you got a new high score!");
+        dialog.setContentText("Please enter your name:");
+        Optional<String> result = dialog.showAndWait();
+        return result.orElse("Anonymous");
+    }
+
+    public void updateScoreWithPlayerName(String playerName) {
+        try {
+            URL url = new URL(databaseUrl + "/scores.json");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setDoOutput(true);
+
+            String json = "{\"name\": \"" + playerName + "\", \"score\": " + score + "}";
+            connection.getOutputStream().write(json.getBytes());
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode == 200) {
+                System.out.println("Score updated successfully!");
+            } else {
+                System.out.println("Error updating score: " + responseCode);
+            }
+        } catch (Exception e) {
+            System.out.println("Error updating score: " + e.getMessage());
+        }
+    }
+
+    public void displayLeaderboard(Text leaderboardText) {
+        try {
+            URL url = new URL(databaseUrl + "/scores.json");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+    
+            int responseCode = connection.getResponseCode();
+            if (responseCode == 200) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String line;
+                StringBuilder leaderboard = new StringBuilder();
+                while ((line = reader.readLine()) != null) {
+                    leaderboard.append(line);
+                }
+                reader.close();
+    
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode jsonNode = mapper.readTree(leaderboard.toString());
+    
+                // Sort the scores in descending order
+                List<JsonNode> scores = new ArrayList<>();
+                jsonNode.fieldNames().forEachRemaining(fieldName -> scores.add(jsonNode.get(fieldName)));
+                scores.sort((a, b) -> b.get("score").asInt() - a.get("score").asInt());
+    
+                StringBuilder scoresString = new StringBuilder();
+                for (JsonNode node : scores) {
+                    String name = node.get("name").asText();
+                    int score = node.get("score").asInt();
+                    scoresString.append(name).append(": ").append(score).append("\n");
+                }
+    
+                leaderboardText.setText(scoresString.toString());
+            } else {
+                System.out.println("Error displaying leaderboard: " + responseCode);
+            }
+        } catch (Exception e) {
+            System.out.println("Error displaying leaderboard: " + e.getMessage());
+        }
+    }
     public void bombs() {
         long currentTime = System.currentTimeMillis();
         for (int i = bombs.size() - 1; i >= 0; i--) {
@@ -595,6 +904,7 @@ public class RSnake {
         int bombY = rand.nextInt(height);
     
         boolean isOccupied = false;
+        //so that bomb doesnt spawn on snake
         for (Corner c : snake) {
             if (c.x == bombX && c.y == bombY) {
                 isOccupied = true;

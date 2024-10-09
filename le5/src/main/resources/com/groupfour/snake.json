@@ -1,0 +1,49 @@
+[
+  {
+    "snakeName": "Green Snake",
+    "description": "Normal snake",
+    "snakeImage": "regSnake.png",
+    "placeholder_image": "placeholder.png",
+    "price": 0
+  },
+
+  {
+    "snakeName": "Red Snake",
+    "description": "2x score multiplier, 1.5x speed",
+    "snakeImage": "redSnake.png",
+    "placeholder_image": "placeholder.png",
+    "price": 20
+  },
+
+  {
+    "snakeName": "Gold Snake",
+    "description": "2x gold gain",
+    "snakeImage": "goldSnake.png",
+    "placeholder_image": "placeholder.png",
+    "price": 30
+  },
+
+  {
+    "snakeName": "Blue Snake",
+    "description": "0.5x speed",
+    "snakeImage": "blueSnake.png",
+    "placeholder_image": "placeholder.png",
+    "price": 50
+  },
+
+  {
+    "snakeName": "White Snake",
+    "description": "Lower bomb duration",
+    "snakeImage": "whiteSnake.png",
+    "placeholder_image": "placeholder.png",
+    "price": 60
+  },
+
+  {
+    "snakeName": "Forbidden Snake",
+    "description": "Snake doesn't grow in size",
+    "snakeImage": "forbiddenSnake.png",
+    "placeholder_image": "placeholder.png",
+    "price": 200
+  }
+]
