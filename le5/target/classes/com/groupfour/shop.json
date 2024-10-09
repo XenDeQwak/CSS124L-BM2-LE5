@@ -1,7 +1,7 @@
 [
   {
     "itemName": "Blue Food",
-    "description": "+2 score, +1 size",
+    "description": "+2 food points, +20 score, \n+1 size",
     "itemImage": "blueFood.png",
     "placeholder_image": "placeholder.png",
     "price": 10
@@ -9,7 +9,7 @@
 
   {
     "itemName": "Green Food",
-    "description": "+3 score, +1 size",
+    "description": "+3 food points, +30 score, \n+1 size",
     "itemImage": "greenFood.png",
     "placeholder_image": "placeholder.png",
     "price": 50
@@ -17,7 +17,7 @@
 
   {
     "itemName": "Violet Food",
-    "description": "+5 score, +1 size",
+    "description": "+5 score, +50 score, \n+1 size",
     "itemImage": "violetFood.png",
     "placeholder_image": "placeholder.png",
     "price": 200
@@ -25,7 +25,7 @@
 
   {
     "itemName": "The Forbidden Food",
-    "description": "+10 score, +3 size",
+    "description": "+10 score, +100 score, \n+3 size",
     "itemImage": "forbiddenFood.png",
     "placeholder_image": "placeholder.png",
     "price": 500
