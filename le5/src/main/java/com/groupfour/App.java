@@ -1,52 +1,60 @@
 package com.groupfour;
 
+import java.io.IOException;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import javafx.application.Application;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.io.IOException;
 
 
 public class App extends Application {
 
+
     static Scene scene;
     private static Stage stage;
+
 
     @Override
     public void start(Stage stage) throws IOException {
         App.stage = stage;
         try {
+
+
+
+            // Instantiate games
             RSnake rSnake = new RSnake();
+
+
+
+            // Instantiate stage and scene
             VBox root = new VBox();
             scene = new Scene(root, 640, 480);
             stage.setScene(scene);
             stage.show();
-
             root.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-            
+
+
 
             //UI Elements
             HBox titleBox = new HBox();
             titleBox.setAlignment(Pos.CENTER);
             titleBox.getStyleClass().add("titlebox");
+
             Text text = new Text("3 Games");
             text.getStyleClass().add("title");
             titleBox.getChildren().add(text);
@@ -56,6 +64,9 @@ public class App extends Application {
             gameBox.setHgap(20);
             gameBox.setVgap(20);
             gameBox.setAlignment(Pos.CENTER);
+
+
+
             //Json components
             JsonNode frontPageNode = new ObjectMapper().readTree(getClass().getResourceAsStream("fpData.json"));
             if (frontPageNode.isArray()) {
@@ -102,31 +113,41 @@ public class App extends Application {
             }
             root.getChildren().addAll(titleBox, gameBox);
             
+
+
             //When a cell gets clicked, this happens
             gameBox.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
-            Node node = (Node) e.getTarget();
-            if (node instanceof ImageView || node instanceof Label) {
-                node = node.getParent();
-            }
-            if (node != null && GridPane.getColumnIndex(node) != null && GridPane.getRowIndex(node) != null) {
-                int columnIndex = GridPane.getColumnIndex(node);
-                int rowIndex = GridPane.getRowIndex(node);
-
-                if (columnIndex == 0 && rowIndex == 0) {
-                    rSnake.startSnakeGame();
-                } else if (columnIndex == 1 && rowIndex == 0) {
-                    System.out.println("Connect Four");
-                } 
-                
-                else if (columnIndex == 2 && rowIndex == 0) {
-                    System.out.println("2048");
-                    game_2048 game = new game_2048();
+                Node node = (Node) e.getTarget();
+                if (node instanceof ImageView || node instanceof Label) {
+                    node = node.getParent();
                 }
-            } 
-            else {
-                System.out.println("No games");
-            }
-        });
+                if (node != null && GridPane.getColumnIndex(node) != null && GridPane.getRowIndex(node) != null) {
+                    int columnIndex = GridPane.getColumnIndex(node);
+                    int rowIndex = GridPane.getRowIndex(node);
+
+                    if (columnIndex == 0 && rowIndex == 0) {
+                        rSnake.displayLoadingScreen();
+                    } else if (columnIndex == 1 && rowIndex == 0) {
+                        System.out.println("Connect Five");
+                        try {
+                            connect5 open = new connect5();
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                        }
+                    } 
+                    
+                    else if (columnIndex == 2 && rowIndex == 0) {
+                        System.out.println("2048");
+                        game_2048 game = new game_2048();
+                    } else if (columnIndex == 0 && rowIndex == 1) {
+                        System.out.println("Space Attackers game");
+                    }
+                } else {
+                    System.out.println("No games");
+                }
+            });
+
+
 
         } catch (IOException e) {
             System.err.println("Error");
@@ -134,11 +155,16 @@ public class App extends Application {
         }
     }
     
+
+
     public static void main(String[] args) {
         launch();
     }
 
+
+    
     public static Stage getStage() {
         return stage;
     }
+
 }   
