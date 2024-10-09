@@ -173,7 +173,7 @@
             </GridPane>
             <ImageView fitHeight="107.0" fitWidth="1067.0" layoutX="155.0" layoutY="7.0" pickOnBounds="true" preserveRatio="true">
                <image>
-                  <Image url="file:src\main\res\c5Banner.png" />
+                  <Image url="file:le5\src\main\resources\com\groupfour\res\c5Banner.png" />
                </image>
             </ImageView>
             <Label layoutX="977.0" layoutY="124.0" prefHeight="88.0" prefWidth="245.0" text="Player 1">
