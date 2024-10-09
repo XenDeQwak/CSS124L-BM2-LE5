@@ -9,14 +9,11 @@ import javafx.scene.shape.Circle;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
-
-import org.w3c.dom.Node;
 public class Controller implements Initializable{
 
     private static MediaPlayer mediaPlayer;
