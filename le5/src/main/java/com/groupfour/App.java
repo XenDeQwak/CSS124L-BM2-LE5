@@ -141,8 +141,6 @@ public class App extends Application {
                     else if (columnIndex == 2 && rowIndex == 0) {
                         System.out.println("2048");
                         game_2048 game = new game_2048();
-                    } else if (columnIndex == 0 && rowIndex == 1) {
-                        System.out.println("Space Attackers game");
                     }
                 } else {
                     System.out.println("No games");

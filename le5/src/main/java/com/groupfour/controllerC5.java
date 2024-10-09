@@ -43,32 +43,28 @@ public class controllerC5 implements Initializable{
         @Override
         public void initialize(URL arg0, ResourceBundle arg1) {
             circles = new ArrayList<>();
-            for (javafx.scene.Node node : gridpane.getChildren()) {
+            for (Node node : gridpane.getChildren()) {
                 if (node instanceof Circle) {
                     circles.add((Circle) node);
                 }
             }
 
-            gridpane.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-                @Override
-                public void handle(MouseEvent event) {
-                    Node node = (Node) event.getTarget();
-                    int columnIndex = GridPane.getColumnIndex((javafx.scene.Node) node);
-                    if (columnIndex != -1) {
-                        changeCircleColor(columnIndex);
-                    }
-                }
+            gridpane.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
+                Node node = (Node) e.getTarget();
+                int columnIndex = GridPane.getColumnIndex(node);
+                changeCircleColor(columnIndex);
             });
         }
 
         private void changeCircleColor(int columnIndex) {
-            for (int i = circles.size() - 1; i >= 0; i--) {
-                Circle circle = circles.get(i);
-                int circleColumnIndex = GridPane.getColumnIndex(circle);
-                if (circleColumnIndex == columnIndex && circle.getFill().equals(Color.LIGHTGRAY)) {
-                    circle.setFill(Color.RED); 
-                    break;
-                }
-            }
+            // for (int i = circles.size() - 1; i >= 0; i--) {
+            //     Circle circle = circles.get(i);
+            //     int circleColumnIndex = GridPane.getColumnIndex(circle);
+            //     if (circleColumnIndex == columnIndex && circle.getFill().equals(Color.LIGHTGRAY)) {
+            //         circle.setFill(Color.RED); 
+            //         break;
+            //     }
+            // }
+            System.out.println("Test");
         }
     }

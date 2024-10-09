@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -64,6 +67,8 @@ public class RSnake {
     private Color bombColor = Color.GRAY;
     private List<Long> bombSpawnTimes = new ArrayList<>();
     private int bombDuration = 15000;
+    private final Lock lock = new ReentrantLock();
+    private final Condition pauseCondition = lock.newCondition();
 
 
     Stage snakeStage = new Stage();
@@ -154,6 +159,7 @@ public class RSnake {
             snakeStage.show();
             App.getStage().hide();
             startGame();
+            pauseGame();
             
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -164,6 +170,14 @@ public class RSnake {
         gameThread = new Thread(() -> {
             while (running) {
                 try {
+                    lock.lock();
+                    try {
+                        while (isPaused) {
+                            pauseCondition.await();
+                        }
+                    } finally {
+                        lock.unlock();
+                    }
                     if (!isPaused) {
                         updateGameState();
                     }
@@ -176,13 +190,23 @@ public class RSnake {
         });
         gameThread.start();
     }
-    //pause not yet implemented, idk if i should even implement it
+    
     public void pauseGame() {
-        isPaused = true;
+        if (!isPaused) {
+            isPaused = true;
+            Platform.runLater(this::draw);
+        }
     }
 
     public void resumeGame() {
         isPaused = false;
+        lock.lock();
+        try {
+            pauseCondition.signal();
+        } finally {
+            lock.unlock();
+        }
+        Platform.runLater(this::draw);
     }
 
     public void stopGame() {
@@ -302,48 +326,63 @@ public class RSnake {
             if (key.getCode() == KeyCode.RIGHT && direction != Dir.left) {
                 direction = Dir.right;
             }
+            if (key.getCode() == KeyCode.R) {
+                resumeGame();
+            }
         };
     }
 
     //draws needed elements
     public void draw() {
-        if (gameOver) {
-            gc.setFill(Color.RED);
-            gc.setFont(new Font("Impact", 50));
-            gc.fillText("GAME OVER", 130, 250);
-            return;
-        }
-        // background
-        gc.setFill(Color.BLACK);
-        gc.fillRect(0, 0, width * cornerSize, height * cornerSize);
-
-        // score
-
-        gc.setFill(foodColors.get(foodColor));
-        gc.fillOval(foodX * cornerSize, foodY * cornerSize, cornerSize, cornerSize);
-
-        // snake
-        for (Corner c : snake) {
-            gc.setFill(Color.LIGHTGREEN);
-            gc.fillRect(c.x * cornerSize, c.y * cornerSize, cornerSize - 1, cornerSize - 1);
-            gc.setFill(Color.GREEN);
-            gc.fillRect(c.x * cornerSize, c.y * cornerSize, cornerSize - 2, cornerSize - 2);
-
-        }
-
-        if (displayFeverDownMessage) {
-            gc.setFill(Color.ORANGE);
-            gc.setFont(new Font("Impact", 40));
-            gc.fillText("FEVER DOWN!!", 130, 50);
-            if (System.currentTimeMillis() - feverDownMessageStartTime > 2000) {
-                displayFeverDownMessage = false;
+        lock.lock();
+        try {
+            if (gameOver) {
+                gc.setFill(Color.RED);
+                gc.setFont(new Font("Impact", 50));
+                gc.fillText("GAME OVER", 130, 250);
+                return;
             }
+            // background
+            gc.setFill(Color.BLACK);
+            gc.fillRect(0, 0, width * cornerSize, height * cornerSize);
+    
+            // score
+    
+            gc.setFill(foodColors.get(foodColor));
+            gc.fillOval(foodX * cornerSize, foodY * cornerSize, cornerSize, cornerSize);
+    
+            // snake
+            for (Corner c : snake) {
+                gc.setFill(Color.LIGHTGREEN);
+                gc.fillRect(c.x * cornerSize, c.y * cornerSize, cornerSize - 1, cornerSize - 1);
+                gc.setFill(Color.GREEN);
+                gc.fillRect(c.x * cornerSize, c.y * cornerSize, cornerSize - 2, cornerSize - 2);
+    
+            }
+    
+            if (displayFeverDownMessage) {
+                gc.setFill(Color.ORANGE);
+                gc.setFont(new Font("Impact", 40));
+                gc.fillText("FEVER DOWN!!", 130, 50);
+                if (System.currentTimeMillis() - feverDownMessageStartTime > 2000) {
+                    displayFeverDownMessage = false;
+                }
+            }
+    
+            gc.setFill(bombColor);
+            for (Corner bomb : bombs) {
+                gc.fillOval(bomb.x * cornerSize, bomb.y * cornerSize, cornerSize, cornerSize);
+            }
+    
+            if (isPaused) {
+                gc.setFill(Color.RED);
+                gc.setFont(new Font("Impact", 40));
+                gc.fillText("GAME PAUSED", 130, 50);
+                gc.fillText("Press R to resume", 100, 90);
+            }
+        } finally {
+            lock.unlock();
         }
-
-        gc.setFill(bombColor);
-        for (Corner bomb : bombs) {
-        gc.fillOval(bomb.x * cornerSize, bomb.y * cornerSize, cornerSize, cornerSize);
-    }
     }
 
     //makes new food everytime a snake eats food
@@ -394,6 +433,7 @@ public class RSnake {
     }
 
     public void shop() throws IOException {
+        pauseGame();
         snakeStage.setTitle("Store");
         VBox root = new VBox();
         Scene scene = new Scene(root, 480, 360);
@@ -595,6 +635,7 @@ public class RSnake {
         int bombY = rand.nextInt(height);
     
         boolean isOccupied = false;
+        //so that bomb doesnt spawn on snake
         for (Corner c : snake) {
             if (c.x == bombX && c.y == bombY) {
                 isOccupied = true;
