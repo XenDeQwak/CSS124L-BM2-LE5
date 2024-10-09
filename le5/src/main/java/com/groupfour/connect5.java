@@ -1,4 +1,4 @@
-package com.connect5;
+package com.groupfour;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
