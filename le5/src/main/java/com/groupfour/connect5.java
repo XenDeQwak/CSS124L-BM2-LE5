@@ -66,7 +66,6 @@ public class connect5 {
             App.getStage().show();
         });
         
-        // Apply the style directly to the button
         returnBtn.setStyle(
             "-fx-background-color: #444;" +
             "-fx-text-fill: #FFF;" +
@@ -78,7 +77,6 @@ public class connect5 {
             "-fx-transition: -fx-background-color 0.3s;"
         );
                 
-        // Add a hover effect
         returnBtn.setOnMouseEntered(e -> returnBtn.setStyle(
             "-fx-background-color: #555;" +
             "-fx-text-fill: #FFF;" +
@@ -101,13 +99,11 @@ public class connect5 {
         "-fx-transition: -fx-background-color 0.3s;"
         ));
         
-        // Position the button below the banner image
-        returnBtn.setLayoutY(TILE_SIZE * (ROWS + 2.5)); // Adjusted y position
-        returnBtn.setLayoutX((TILE_SIZE * (COLUMNS - 8)) / 2 ); // Adjusted x position
+        returnBtn.setLayoutY(TILE_SIZE * (ROWS + 2.5));
+        returnBtn.setLayoutX((TILE_SIZE * (COLUMNS - 8)) / 2 ); 
         
-        // Scale up the button
-        returnBtn.setPrefWidth(720); // Set preferred width
-        returnBtn.setPrefHeight(50); // Set preferred height
+        returnBtn.setPrefWidth(720); 
+        returnBtn.setPrefHeight(50);
         
         resetBoard();
         return returnBtn;
