@@ -9,6 +9,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Background;
@@ -32,9 +33,11 @@ public class game_2048{
     //Could be used for dynamic grid size, user input menu
     int gridSize =4;
     Random random = new Random();
+    Label gameOverText = new Label();
     private GridPane backGround;
     private GridPane gameTiles;
     private Tile accessArray[][];
+    Scene gameScene;
     public game_2048(){
         App.getStage().close();
         Stage stage2048 = new Stage();
@@ -75,17 +78,15 @@ public class game_2048{
         mainStack.getChildren().addAll(backGround,gameTiles);
         mainStack.setAlignment(Pos.CENTER);
         root.setAlignment(Pos.CENTER);
-        root.getChildren().addAll(mainStack,returnBtn);
+        root.getChildren().addAll(mainStack,gameOverText,returnBtn);
 
         //SWITCH SCENES//
-        Scene gameScene = new Scene(root, 900, 700);
+        gameScene = new Scene(root, 900, 700);
         stage2048.setScene(gameScene);
         stage2048.show();
 
         //For Detecting WASD and Arrow Keys
         EventHandler<KeyEvent> keyEventHandler = e -> {
-            //spawnTile();
-            System.out.println("Key pressed: " + e.getCode());
             if (e.getCode() == KeyCode.W || e.getCode() == KeyCode.UP) {
                 moveUp();
             } else if (e.getCode() == KeyCode.A || e.getCode() == KeyCode.LEFT) {
@@ -97,6 +98,10 @@ public class game_2048{
             } else {
                 return;
             }
+            if(isGameOver()){
+                gameOverText.setText("Game Over");
+                gameOverText.setStyle("-fx-font-size: 24; -fx-text-fill: red;");
+            };
         };
         gameScene.setOnKeyPressed(keyEventHandler);
         spawnTile();
@@ -104,7 +109,6 @@ public class game_2048{
     }
     //End of constructor
 
-    //Movement functions
     private void spawnTile(){
         int randomInt1 = random.nextInt(gridSize);
         int randomInt2 = random.nextInt(gridSize);
@@ -130,12 +134,9 @@ public class game_2048{
         for(int row=1;row<gridSize;row++){
             for(int column=0;column<gridSize;column++){
                 Tile tile=accessArray[row][column];
-                //Detect if your current tile has value (0 default null for int apparently)
                 if(tile.getValue() != 0){
                     for(int refRow=row-1;refRow>=0;refRow--){
-                        //Get the tile that is one row above the current tile
                         Tile refTile=accessArray[refRow][column];
-                        //If the value of that tile is equal to the value of current tile
                         if(refTile.getValue()==tile.getValue()){
                             tile.setValue(tile.getValue()+refTile.getValue());
                             replaceTileVertical(tile, refRow, column);
@@ -144,8 +145,6 @@ public class game_2048{
                             moved=true;
                             break;
                         }
-                        //If the value of that tile is not 0 and is not equal to the value of current tile, 
-                        //move current tile to one row below the reference tile.
                         else if(refTile.getValue() != 0){
                             if(row==refRow+1){
                                 leftEmpty=false;
@@ -158,7 +157,6 @@ public class game_2048{
                             break;
                         }
                     }
-                    //If leftEmpty, means every tile above is value=0;means null
                     if(leftEmpty){
                     replaceTileVertical(tile, 0, column);
                     createClearTile(row, column);
@@ -179,12 +177,9 @@ public class game_2048{
         for(int row=gridSize-2;row>=0;row--){
             for(int column=0;column<gridSize;column++){
                 Tile tile=accessArray[row][column];
-                //Detect if your current tile has value (0 default null for int apparently)
                 if(tile.getValue() != 0){
                     for(int refRow=row+1;refRow<gridSize;refRow++){
-                        //Get the tile that is one row below the current tile
                         Tile refTile=accessArray[refRow][column];
-                        //If the value of that tile is equal to the value of current tile
                         if(refTile.getValue()==tile.getValue()){
                             tile.setValue(tile.getValue()+refTile.getValue());
                             replaceTileVertical(tile, refRow, column);
@@ -193,8 +188,6 @@ public class game_2048{
                             moved=true;
                             break;
                         }
-                        //If the value of that tile is not 0 and is not equal to the value of current tile, 
-                        //move current tile to one row below the reference tile.
                         else if(refTile.getValue() != 0){
                             if(row==refRow-1){
                                 belowEmpty=false;
@@ -207,7 +200,6 @@ public class game_2048{
                             break;
                         }
                     }
-                    //If belowEmpty, means every tile above is value=0;means null
                     if(belowEmpty){
                         replaceTileVertical(tile, gridSize-1, column);
                         createClearTile(row, column);
@@ -228,14 +220,10 @@ public class game_2048{
         for(int row=0;row<gridSize;row++){
             for(int column=gridSize-2;column>=0;column--){
                 Tile tile=accessArray[row][column];
-                //Detect if your current tile has value (0 default null for int apparently)
                 if(tile.getValue() != 0){
                     for(int refColumn=column+1;refColumn<gridSize;refColumn++){
-                        //Get the tile that is one column to the left of the current tile
                         Tile refTile=accessArray[row][refColumn];
-                        //If the value of that tile is equal to the value of current tile
                         if(refTile.getValue()==tile.getValue()){
-                            System.out.println("test");
                             tile.setValue(tile.getValue()+refTile.getValue());
                             replaceTileHorizontal(tile, row, refColumn);
                             createClearTile(row, column);
@@ -243,8 +231,6 @@ public class game_2048{
                             moved=true;
                             break;
                         }
-                        //If the value of that tile is not 0 and is not equal to the value of current tile, 
-                        //move current tile to one row below the reference tile.
                         else if(refTile.getValue() != 0){
                             if(column==refColumn-1){
                                 leftEmpty=false;
@@ -257,7 +243,6 @@ public class game_2048{
                             break;
                         }
                     }
-                    //If leftEmpty, means every tile above is value=0;means null
                     if(leftEmpty){
                     replaceTileHorizontal(tile, row, gridSize-1);
                     createClearTile(row, column);
@@ -278,12 +263,9 @@ public class game_2048{
         for(int row=0;row<gridSize;row++){
             for(int column=1;column<gridSize;column++){
                 Tile tile=accessArray[row][column];
-                //Detect if your current tile has value (0 default null for int apparently)
                 if(tile.getValue() != 0){
                     for(int refColumn=column-1;refColumn>=0;refColumn--){
-                        //Get the tile that is one column to the left of the current tile
                         Tile refTile=accessArray[row][refColumn];
-                        //If the value of that tile is equal to the value of current tile
                         if(refTile.getValue()==tile.getValue()){
                             tile.setValue(tile.getValue()+refTile.getValue());
                             replaceTileHorizontal(tile, row, refColumn);
@@ -292,8 +274,6 @@ public class game_2048{
                             moved=true;
                             break;
                         }
-                        //If the value of that tile is not 0 and is not equal to the value of current tile, 
-                        //move current tile to one row below the reference tile.
                         else if(refTile.getValue() != 0){
                             if(column==refColumn+1){
                                 leftEmpty=false;
@@ -306,7 +286,6 @@ public class game_2048{
                             break;
                         }
                     }
-                    //If leftEmpty, means every tile above is value=0;means null
                     if(leftEmpty){
                     replaceTileHorizontal(tile, row, 0);
                     createClearTile(row, column);
@@ -321,10 +300,37 @@ public class game_2048{
         }
     }
     
+    private boolean isGameOver() {
+        for (int row = 0; row < gridSize; row++) {
+            for (int column = 0; column < gridSize; column++) {
+                if (accessArray[row][column].getValue() == 0) {
+                    return false;
+                }
+            }
+        }
+        // Check if there are any adjacent tiles with the same value
+        for (int row = 0; row < gridSize; row++) {
+            for (int column = 0; column < gridSize - 1; column++) {
+                if (accessArray[row][column].getValue() == accessArray[row][column + 1].getValue()) {
+                    return false;
+                }
+            }
+        }
+        for (int row = 0; row < gridSize - 1; row++) {
+            for (int column = 0; column < gridSize; column++) {
+                if (accessArray[row][column].getValue() == accessArray[row + 1][column].getValue()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     private void replaceTileVertical(Tile tile, int row, int column){
-        gameTiles.getChildren().remove(accessArray[row][column]);
-        GridPane.setRowIndex(tile,row);
-        accessArray[row][column] = tile;
+       
+            gameTiles.getChildren().remove(accessArray[row][column]);
+            GridPane.setRowIndex(tile,row);
+            accessArray[row][column] = tile;
     }
     private void replaceTileHorizontal(Tile tile, int row, int column){
         gameTiles.getChildren().remove(accessArray[row][column]);
@@ -345,10 +351,6 @@ public class game_2048{
         private int value;
         private Text text;
 
-        
-
-        
-    
         public Tile() {
             text = new Text();
             text.setFont(javafx.scene.text.Font.font(24));
