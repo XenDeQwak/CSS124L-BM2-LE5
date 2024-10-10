@@ -58,6 +58,8 @@ public class connect5 {
         Button returnBtn = new Button("Return");
         returnBtn.setFocusTraversable(false);
         returnBtn.setOnMouseClicked(e->{
+            controllerC5 cC5 = new controllerC5();
+            cC5.stopBackgroundMusic();
             stage.close();
             App.getStage().show();
         });
@@ -148,15 +150,16 @@ public class connect5 {
     grid[column][row] = disc;
     discRoot.getChildren().add(disc);
     disc.setTranslateX(column * (TILE_SIZE + 5) + 20);
-    disc.setTranslateY(-TILE_SIZE); // Start the disc from the top
+    disc.setTranslateY(-TILE_SIZE);
 
-    // Animate the disc falling
     Timeline timeline = new Timeline();
     timeline.getKeyFrames().add(new KeyFrame(Duration.millis(500), new KeyValue(disc.translateYProperty(), row * (TILE_SIZE + 5) + 20)));
     timeline.play();
 
     if (gameEnded(column, row)) {
         gameOver();
+    } else if (isTie()) {
+        tieGame();
     }
 
     redMove = !redMove;
@@ -194,10 +197,43 @@ public class connect5 {
     if (result.isPresent() && result.get() == ButtonType.OK) {
         resetBoard();
     } else {
+        controllerC5 cC5 = new controllerC5();
+        cC5.stopBackgroundMusic();
         stage.close();
         App.getStage().show();
     }
 }
+
+    private boolean isTie() {
+        for (int column = 0; column < COLUMNS; column++) {
+            for (int row = 0; row < ROWS; row++) {
+                if (getDisc(column, row).isEmpty()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private void tieGame() {
+        System.out.println("It's a tie!");
+
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Game Over");
+        alert.setHeaderText("It's a tie!");
+        alert.setContentText("Do you want to play again?");
+
+        Optional<ButtonType> result = alert.showAndWait();
+
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            resetBoard();
+        } else {
+            stage.close();
+            App.getStage().show();
+        }
+    }
+
+
 
     private void resetBoard() {
 
@@ -206,7 +242,7 @@ public class connect5 {
                 grid[column][row] = null;
             }
         }
-
+        
         discRoot.getChildren().clear();
         redMove = true;
     }
@@ -236,8 +272,8 @@ public class connect5 {
         controllerC5 cC5 = new controllerC5();
         cC5.playBackgroundMusic();
         FXMLLoader loader = new FXMLLoader(getClass().getResource("connect5.fxml"));
-    Parent root = loader.load();
-    scene = new Scene(root, 1280, 750);
+        Parent root = loader.load();
+        scene = new Scene(root, 1280, 750);
         stage = new Stage();
         scene = new Scene(createContent());
         stage.setScene(scene);
@@ -245,6 +281,13 @@ public class connect5 {
         stage.getIcons().add(new Image(getClass().getResource("c5Logo.png").toExternalForm()));
         resetBoard();
         stage.show();
+
+
+        stage.setOnCloseRequest(event -> {
+            cC5.stopBackgroundMusic();
+            System.out.println("Application closed");
+            App.getStage().show();
+        });
 
     }
 
