@@ -143,6 +143,10 @@ public class RSnake {
             Button restartBtn = new Button("Restart game");
             Button shopBtn = new Button("Shop");
             Button ldbBtn = new Button("Leaderboards");
+            returnBtn.setFocusTraversable(false);
+            restartBtn.setFocusTraversable(false);
+            shopBtn.setFocusTraversable(false);
+            ldbBtn.setFocusTraversable(false);
             HBox controlBox = new HBox();
             returnBtn.setOnAction(e -> {
                 snakeStage.close();
