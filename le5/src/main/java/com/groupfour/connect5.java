@@ -19,6 +19,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -63,8 +65,50 @@ public class connect5 {
             stage.close();
             App.getStage().show();
         });
-        returnBtn.setLayoutY(TILE_SIZE * (ROWS + 1));
-        returnBtn.setLayoutX((TILE_SIZE * (ROWS + 2)) / 2 );
+        
+        // Apply the style directly to the button
+        returnBtn.setStyle(
+            "-fx-background-color: #444;" +
+            "-fx-text-fill: #FFF;" +
+            "-fx-border-color: #666;" +
+            "-fx-border-width: 2;" +
+            "-fx-border-radius: 10;" +
+            "-fx-font-size: 24;" +
+            "-fx-font-weight: bold;" +
+            "-fx-transition: -fx-background-color 0.3s;"
+        );
+                
+        // Add a hover effect
+        returnBtn.setOnMouseEntered(e -> returnBtn.setStyle(
+            "-fx-background-color: #555;" +
+            "-fx-text-fill: #FFF;" +
+            "-fx-border-color: #666;" +
+            "-fx-border-width: 2;" +
+            "-fx-border-radius: 10;" +
+            "-fx-font-size: 24;" +
+            "-fx-font-weight: bold;" +
+            "-fx-transition: -fx-background-color 0.3s;"
+        ));
+        
+        returnBtn.setOnMouseExited(e -> returnBtn.setStyle(
+        "-fx-background-color: #444;" +
+        "-fx-text-fill: #FFF;" +
+        "-fx-border-color: #666;" +
+        "-fx-border-width: 2;" +
+        "-fx-border-radius: 10;" +
+        "-fx-font-size: 24;" +
+        "-fx-font-weight: bold;" +
+        "-fx-transition: -fx-background-color 0.3s;"
+        ));
+        
+        // Position the button below the banner image
+        returnBtn.setLayoutY(TILE_SIZE * (ROWS + 2.5)); // Adjusted y position
+        returnBtn.setLayoutX((TILE_SIZE * (COLUMNS - 8)) / 2 ); // Adjusted x position
+        
+        // Scale up the button
+        returnBtn.setPrefWidth(720); // Set preferred width
+        returnBtn.setPrefHeight(50); // Set preferred height
+        
         resetBoard();
         return returnBtn;
     }
