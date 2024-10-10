@@ -28,6 +28,9 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 
+
+
+
 public class game_2048{
 
     //Could be used for dynamic grid size, user input menu
@@ -50,6 +53,7 @@ public class game_2048{
             stage2048.close();
             App.getStage().show();
         });
+        VBox.setMargin(returnBtn, new Insets(20, 0, 0, 0));
 
         //CREATING GRID FOR GAME
         gameTiles = new GridPane();
@@ -359,15 +363,64 @@ public class game_2048{
             setOnMouseClicked(e-> {
                 System.out.println(value);
             });
+            setBorder(new Border(new BorderStroke(Color.web("#948c7c"), BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(5))));
+            updateColor();
         }
     
         public void setValue(int value) {
             this.value = value;
             text.setText(String.valueOf(value));
+            updateColor();
         }
     
         public int getValue() {
             return value;
+        }
+
+        public void updateColor() {
+            Color color;
+            switch (value) {
+                case 2:
+                    color = Color.web("#eee4da");
+                    break;
+                case 4:
+                    color = Color.web("#ede0c8");
+                    break;
+                case 8:
+                    color = Color.web("#f2b179");
+                    break;
+                case 16:
+                    color = Color.web("#f59563");
+                    break;
+                case 32:
+                    color = Color.web("#f67c5f");
+                    break;
+                case 64:
+                    color = Color.web("#f3623b");
+                    break;
+                case 128:
+                    color = Color.web("#b3a47a");
+                    break;
+                case 256:
+                    color = Color.web("#f8d82a");
+                    break;
+                case 512:
+                    color = Color.web("#f9c80e");
+                    break;
+                case 1024:
+                    color = Color.web("#f9c922");
+                    break;
+                case 2048:
+                    color = Color.web("#ffea4d");
+                    break;
+                case 4096:
+                    color = Color.web("#ffcc00");
+                    break;
+                default:
+                    color = Color.web("#ccc");
+                    break;
+            }
+            setBackground(new Background(new BackgroundFill(color, new CornerRadii(15), Insets.EMPTY)));
         }
     }
 }
