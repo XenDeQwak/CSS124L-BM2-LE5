@@ -42,6 +42,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
 
@@ -178,7 +179,9 @@ public class RSnake {
 
                     Text leaderboardTitle = new Text("Leaderboard");
                     leaderboardTitle.setFont(new Font("Arial", 24));
-                    root.getChildren().add(leaderboardTitle);
+                    VBox leaderboardVbox = new VBox(leaderboardTitle);
+                    leaderboardVbox.setAlignment(Pos.CENTER);
+                    root.getChildren().add(leaderboardVbox);
 
                     Text leaderboardText = new Text();
                     leaderboardText.setFont(new Font("Arial", 18));

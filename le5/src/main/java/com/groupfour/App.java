@@ -130,11 +130,7 @@ public class App extends Application {
                     if (columnIndex == 0 && rowIndex == 0) {
                         rSnake.startSnakeGame();
                     } else if (columnIndex == 1 && rowIndex == 0) {
-                        try {
-                            open.openConnect5();
-                        } catch (IOException e1) {
-                            e1.printStackTrace();
-                        }
+                        open.openConnect5();
                         System.out.println("Connect Five");
                     } 
                     
