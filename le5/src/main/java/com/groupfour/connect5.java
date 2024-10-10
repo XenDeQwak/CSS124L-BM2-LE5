@@ -144,9 +144,13 @@ public class connect5 {
 
             rectangle.setOnMouseEntered(e -> rectangle.setFill(Color.rgb(200, 200, 50, 0.3)));
             rectangle.setOnMouseExited(e -> rectangle.setFill(Color.TRANSPARENT));
-
+            
+            controllerC5 cC5 = new controllerC5();
             final int column = x;
-            rectangle.setOnMouseClicked(e -> placeDisc(new Disc(redMove), column));
+            rectangle.setOnMouseClicked(e -> {
+                placeDisc(new Disc(redMove), column);
+                cC5.playSoundEffect();
+            });
 
             list.add(rectangle);
 
