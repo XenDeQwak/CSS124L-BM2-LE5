@@ -105,17 +105,17 @@ public class game_2048{
     //End of constructor
 
     //Movement functions
-    private void spawnTile() {
-        int randomInt1, randomInt2;
-        do {
+    private void spawnTile(){
+        int randomInt1 = random.nextInt(gridSize);
+        int randomInt2 = random.nextInt(gridSize);
+        while (accessArray[randomInt1][randomInt2].getValue()!=0){
             randomInt1 = random.nextInt(gridSize);
             randomInt2 = random.nextInt(gridSize);
-        } while (accessArray[randomInt1][randomInt2].getValue() != 0);
-    
-        Tile newTile = accessArray[randomInt1][randomInt2];
-        newTile.setBackground(new Background(new BackgroundFill(Color.web("#ece4db"), new CornerRadii(20), Insets.EMPTY)));
-        newTile.setBorder(new Border(new BorderStroke(Color.web("#948c7c"), BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(5))));
-        newTile.setValue(2);
+        }
+        accessArray[randomInt1][randomInt2].setBackground((new Background(new BackgroundFill(Color.web("#ece4db"), new CornerRadii(20), Insets.EMPTY))));
+        accessArray[randomInt1][randomInt2].setBorder(new Border(new BorderStroke(Color.web("#948c7c"), BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(5))));
+
+        accessArray[randomInt1][randomInt2].setValue(2);
     }
     
     private void mergeTile(Tile tileOrigin, Tile tileTarget){
