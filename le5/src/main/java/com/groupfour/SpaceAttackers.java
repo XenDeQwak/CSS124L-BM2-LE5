@@ -21,6 +21,7 @@ public class SpaceAttackers {
     Stage stage;
 
     ImageView ship;
+    ArrayList<ImageView> enemyList;
 
     ArrayList<Rectangle> bullets;
     Thread bullThread;
