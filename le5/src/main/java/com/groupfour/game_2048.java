@@ -47,6 +47,7 @@ public class game_2048{
             stage2048.close();
             App.getStage().show();
         });
+        VBox.setMargin(returnBtn, new Insets(20, 0, 0, 0));
 
         //CREATING GRID FOR GAME
         gameTiles = new GridPane();
