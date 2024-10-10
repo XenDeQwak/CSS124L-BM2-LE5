@@ -3,8 +3,8 @@ package com.groupfour;
 import javafx.util.Duration;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
-import javafx.animation.ScaleTransition;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Point2D;
 import javafx.scene.Parent;
@@ -19,8 +19,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,7 +26,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import javafx.application.Application;
 
 public class connect5 {
 
@@ -128,7 +125,7 @@ public class connect5 {
                 circle.setCenterY(TILE_SIZE/2);
                 circle.setTranslateX(x * (TILE_SIZE+ 5) + 20);
                 circle.setTranslateY(y * (TILE_SIZE+ 5) + 20);
-                shape = shape.subtract(shape, circle);
+                shape = Shape.subtract(shape, circle);
             }
 
         }
@@ -307,28 +304,34 @@ public class connect5 {
 
     }
 
-    public void openConnect5() throws IOException {
+    public void openConnect5() {
+    new Thread(() -> {
+        Platform.runLater(() -> {
+            try {
+                controllerC5 cC5 = new controllerC5();
+                cC5.playBackgroundMusic();
 
-        controllerC5 cC5 = new controllerC5();
-        cC5.playBackgroundMusic();
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("connect5.fxml"));
-        Parent root = loader.load();
-        scene = new Scene(root, 1280, 750);
-        stage = new Stage();
-        scene = new Scene(createContent());
-        stage.setScene(scene);
-        stage.setTitle("Connect 5: Bonanza");
-        stage.getIcons().add(new Image(getClass().getResource("c5Logo.png").toExternalForm()));
-        resetBoard();
-        stage.show();
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("connect5.fxml"));
+                Parent root = loader.load();
+                scene = new Scene(root, 1280, 750);
+                stage = new Stage();
+                scene = new Scene(createContent());
+                stage.setScene(scene);
+                stage.setTitle("Connect 5: Bonanza");
+                stage.getIcons().add(new Image(getClass().getResource("c5Logo.png").toExternalForm()));
+                resetBoard();
+                stage.show();
 
-
-        stage.setOnCloseRequest(event -> {
-            cC5.stopBackgroundMusic();
-            System.out.println("Application closed");
-            App.getStage().show();
+                stage.setOnCloseRequest(event -> {
+                    cC5.stopBackgroundMusic();
+                    System.out.println("Application closed");
+                    App.getStage().show();
+                });
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         });
-
-    }
+    }).start(); 
+}
 
 }
