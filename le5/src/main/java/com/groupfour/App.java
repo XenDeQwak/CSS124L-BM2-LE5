@@ -25,8 +25,8 @@ import javafx.stage.Stage;
 
 public class App extends Application {
 
-    static Scene scene;
-    private static Stage stage;
+    public static Scene scene;
+    public static Stage stage;
 
     VBox root;
     HBox titleBox;
@@ -35,15 +35,14 @@ public class App extends Application {
 
     JsonNode frontPageNode;
 
+    // Instantiate game
+    RSnake rSnake = new RSnake();
+    SpaceAttackers spacegame;
+
     @Override
     public void start(Stage stage) throws IOException {
         App.stage = stage;
         try {
-
-
-            // Instantiate game
-            RSnake rSnake = new RSnake();
-            SpaceAttackers spacegame = new SpaceAttackers();
 
 
             // Instantiate stage and scene
@@ -96,11 +95,7 @@ public class App extends Application {
                         System.out.println("2048");
                         game_2048 game = new game_2048();
                     } else if (columnIndex == 0 && rowIndex == 1) {
-                        stage.close();
-                        spacegame.stage.setOnCloseRequest(e2 -> {
-                            stage.show();
-                        });
-                        spacegame.start();
+                        startSpaceGame();
                     }
                 } else {
                     System.out.println("No games");
@@ -113,6 +108,12 @@ public class App extends Application {
             System.err.println("Error");
             e.printStackTrace();
         }
+    }
+
+    private void startSpaceGame() {
+        stage.close();
+        spacegame = new SpaceAttackers(spacegame);
+        spacegame.start();
     }
 
 
