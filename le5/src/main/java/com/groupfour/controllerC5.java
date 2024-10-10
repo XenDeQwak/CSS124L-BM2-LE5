@@ -25,4 +25,8 @@ public class controllerC5{
         mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
         mediaPlayer.play();
     }
+
+    public void stopBackgroundMusic() {
+        mediaPlayer.stop();
+    }
 }
