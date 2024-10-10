@@ -303,7 +303,7 @@ public class RSnake {
             int previousFoodColor = foodColor;
             newFood();
             bombProbability++;
-            if (foodColors.get(previousFoodColor) == Color.BLACK) {
+            if (foodColors.get(previousFoodColor) == Color.WHITE) {
                 foodPoints += 10;
                 score += 100;
                 snake.add(new Corner(snake.get(snake.size() - 4).x, snake.get(snake.size() - 4).y));
