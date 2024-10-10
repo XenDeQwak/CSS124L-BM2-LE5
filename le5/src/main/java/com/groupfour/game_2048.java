@@ -3,8 +3,6 @@ package com.groupfour;
 
 import java.util.Random;
 
-import javafx.animation.Transition;
-import javafx.animation.TranslateTransition;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -24,9 +22,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
-import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 
 
 public class game_2048{
@@ -121,7 +117,7 @@ public class game_2048{
 
         accessArray[randomInt1][randomInt2].setValue(2);
     }
-
+    
     private void mergeTile(Tile tileOrigin, Tile tileTarget){
         int targetRow = GridPane.getRowIndex(tileTarget);
         int targetCol = GridPane.getColumnIndex(tileTarget);
@@ -184,61 +180,67 @@ public class game_2048{
         }
     }
 
-    private void moveDown(){
-        Boolean moved=false;
-        Boolean belowEmpty=true;
-        for(int row=3;row>=0;row--){
-            for(int column=0;column<gridSize;column++){
-                Tile tile=accessArray[row][column];
-                //Detect if your current tile has value (0 default null for int apparently)
-                if(tile.getValue() != 0){
-                    for(int refRow=row+1;refRow<gridSize;refRow++){
-                        //Get the tile that is one row below the current tile
-                        Tile refTile=accessArray[refRow][column];
-                        //If the value of that tile is equal to the value of current tile
-                        if(refTile.getValue()==tile.getValue()){
-                            System.out.println("collide at: "+row+column);
-                            tile.setValue(tile.getValue()+refTile.getValue());
-                            replaceTileVertical(tile, refRow, column);
-                            createClearTile(row, column);
-                            belowEmpty=false;
-                            moved=true;
-                            break;
-                        }
-
-                        //If the value of that tile is not 0 and is not equal to the value of current tile, 
-                        //move current tile to one row below the reference tile.
-                        else if(refTile.getValue() != 0){
-                            System.out.println("unique collide at: "+row+column);
-                            if(row==refRow-1){
-                                belowEmpty=false;
-                                break;
-                            }
-                            replaceTileVertical(tile, refRow-1, column);
-                            createClearTile(row,column);
-                            belowEmpty=false;
-                            moved=true;
-                            break;
-                        }
+    private void moveDown() {
+        boolean moved = false;
+        for (int column = 0; column < gridSize; column++) {
+            for (int row = gridSize - 2; row >= 0; row--) { // Start from second last row
+                Tile tile = accessArray[row][column];
+                if (tile.getValue() != 0) {
+                    int targetRow = row;
+                    // Move down until hitting a tile or the bottom
+                    while (targetRow < gridSize - 1 && accessArray[targetRow + 1][column].getValue() == 0) {
+                        targetRow++;
                     }
-                    //If belowEmpty, means every tile above is value=0;means null
-                    if(belowEmpty){
-                        System.out.println("empty below at: "+row+column);
-                        replaceTileVertical(tile, gridSize-1, column);
+    
+                    // Check for merging with the tile below
+                    if (targetRow < gridSize - 1 && accessArray[targetRow + 1][column].getValue() == tile.getValue()) {
+                        mergeTile(tile, accessArray[targetRow + 1][column]); // Merge tiles
+                        moved = true;
+                    } else if (targetRow != row) { // Move to the empty spot
+                        replaceTileVertical(tile, targetRow, column);
                         createClearTile(row, column);
-                        moved=true;
+                        moved = true;
                     }
-                    belowEmpty=true;
                 }
             }
         }
-        if(moved){
-        spawnTile();
+        if (moved) {
+            spawnTile();
         }
     }
-    private void moveLeft(){
-        System.out.println("wa");
+    
+    
+private void moveLeft() {
+    boolean moved = false;
+    for (int row = 0; row < gridSize; row++) {
+        for (int column = 1; column < gridSize; column++) { // Start from the second column
+            Tile tile = accessArray[row][column];
+            if (tile.getValue() != 0) {
+                int targetColumn = column;
+                
+                // Move left until hitting a tile or the boundary
+                while (targetColumn > 0 && accessArray[row][targetColumn - 1].getValue() == 0) {
+                    targetColumn--;
+                }
+
+                // Check for merging with the tile on the left
+                if (targetColumn > 0 && accessArray[row][targetColumn - 1].getValue() == tile.getValue()) {
+                    mergeTile(tile, accessArray[row][targetColumn - 1]); // Merge tiles
+                    moved = true;
+                } else if (targetColumn != column) { // Move to the empty spot
+                    replaceTileVertical(tile, row, targetColumn);
+                    createClearTile(row, column);
+                    moved = true;
+                }
+            }
+        }
     }
+    if (moved) {
+        spawnTile();
+    }
+}
+
+
     private void moveRight(){
         System.out.println("sha");
     }
