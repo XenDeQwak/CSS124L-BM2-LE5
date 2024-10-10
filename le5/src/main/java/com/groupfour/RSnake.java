@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +22,7 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -38,12 +40,17 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.media.AudioClip;
+import javafx.scene.media.MediaView;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import java.io.File;
 
 
 
@@ -86,9 +93,51 @@ public class RSnake {
     private Text scoreLabel;
     private int score = 0;
     private boolean directionChangePending = false;
-    
 
     Stage snakeStage = new Stage();
+
+    private static MediaPlayer mediaPlayer;
+    public void playBackgroundMusic() {
+        String musicFile = "snakeMusic.mp3";
+        URL resource = getClass().getResource(musicFile);
+        if (resource == null) {
+            System.out.println("Error: Could not find music file " + musicFile);
+            return;
+        }
+        Media media = new Media(resource.toExternalForm());
+        mediaPlayer = new MediaPlayer(media);
+        mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
+        mediaPlayer.setVolume(0.3);
+        mediaPlayer.play();
+    }
+
+    public void playSoundEffect() {
+        String soundFile = "eat.mp3";
+        URL resource = getClass().getResource(soundFile);
+        if (resource == null) {
+            System.out.println("Error: Could not find music file " + soundFile);
+            return;
+        }
+        AudioClip sound = new AudioClip(resource.toExternalForm());
+        sound.setVolume(3.5);
+        sound.play();
+    }
+
+    public void playGameOver() {
+        String soundFile = "gameOver.mp3";
+        URL resource = getClass().getResource(soundFile);
+        if (resource == null) {
+            System.out.println("Error: Could not find music file " + soundFile);
+            return;
+        }
+        AudioClip sound = new AudioClip(resource.toExternalForm());
+        sound.setVolume(6.0);
+        sound.play();
+    }
+
+    public void stopBackgroundMusic() {
+        mediaPlayer.stop();
+    }
 
     public enum Dir {
         left, right, up, down
@@ -139,6 +188,7 @@ public class RSnake {
         try {
             Stage snakeStage = new Stage();
             BorderPane snakeBorderPane = new BorderPane();
+            playBackgroundMusic();
 
             Button returnBtn = new Button("Return to Main Menu");
             Button restartBtn = new Button("Restart game");
@@ -152,6 +202,7 @@ public class RSnake {
             returnBtn.setOnAction(e -> {
                 snakeStage.close();
                 App.getStage().show();
+                stopBackgroundMusic();
                 stopGame();
             });
             restartBtn.setOnAction(e -> {
@@ -207,6 +258,7 @@ public class RSnake {
             snakeBorderPane.setTop(numInfo);
             BorderPane.setAlignment(fpLabel, Pos.TOP_LEFT);
 
+
             Scene scene = new Scene(snakeBorderPane, getWidth() * getCornerSize(), getHeight() * getCornerSize() + 100);
             scene.addEventFilter(KeyEvent.KEY_PRESSED, getKeyEventHandler());
             snakeStage.setScene(scene);
@@ -226,6 +278,7 @@ public class RSnake {
             while (running) {
                 try {
                     lock.lock();
+
                     try {
                         while (isPaused) {
                             pauseCondition.await();
@@ -235,6 +288,7 @@ public class RSnake {
                     }
                     if (!isPaused) {
                         updateGameState();
+
                     }
                     Platform.runLater(this::draw);
                     Thread.sleep(1000 / speed);
@@ -255,6 +309,7 @@ public class RSnake {
 
     public void resumeGame() {
         isPaused = false;
+        playBackgroundMusic();
         lock.lock();
         try {
             pauseCondition.signal();
@@ -301,6 +356,7 @@ public class RSnake {
 
         // Let snake grow if it has eaten food
         if (foodX == snake.get(0).x && foodY == snake.get(0).y) {
+            playSoundEffect();
             lastFoodEatenTime = System.currentTimeMillis();
             snake.add(new Corner(snake.get(snake.size() - 1).x, snake.get(snake.size() - 1).y));
             int previousFoodColor = foodColor;
@@ -358,6 +414,7 @@ public class RSnake {
         if (gameOver) {
             if (hasUpdated) {
                 updateScore();
+                playGameOver();
                 hasUpdated = false;
             }
         } else {
